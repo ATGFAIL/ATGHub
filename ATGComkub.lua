@@ -29,7 +29,7 @@ local allowedPlaces = {
     },
     [136431686349723] = {
         name = "DARK-DECEPTION-HUNTED",
-        url = "https://api.luarmor.net/files/v3/loaders/4b264ea152dbb41b1916494d60607163.lua"
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dark-Deception-Hunted.lua"
     },
     [142823291] = {
         name = "Murder-Mystery-2",
