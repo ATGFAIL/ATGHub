@@ -1,6 +1,7 @@
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local allowedToRun = true
 -- -----------------------
 -- Allowed Place configuration
 -- -----------------------
