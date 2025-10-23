@@ -25,7 +25,7 @@ local allowedPlaces = {
     },
     [102181577519757] = {
         name = "DARK-DECEPTION-HUNTED",
-        url = "https://api.luarmor.net/files/v3/loaders/4b264ea152dbb41b1916494d60607163.lua"
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dark-Deception-Hunted.lua"
     },
     [136431686349723] = {
         name = "DARK-DECEPTION-HUNTED",
@@ -46,6 +46,10 @@ local allowedPlaces = {
     [115317601829407] = {
         name = "Arise-Shadow-Hunt",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Arise-Shadow-Hunt.lua"
+    },
+    [93978595733734] = {
+        name = "Violence-District",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Violence-District.lua"
     }
 }
 
