@@ -51,6 +51,10 @@ local allowedPlaces = {
     [93978595733734] = {
         name = "Violence-District",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Violence-District.lua"
+    },
+    [118915549367482] = {
+        name = "Violence-District",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dont-Wake-the-Brainrots.lua"
     }
 }
 
