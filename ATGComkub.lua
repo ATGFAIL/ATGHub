@@ -46,7 +46,7 @@ local allowedPlaces = {
     },
     [115317601829407] = {
         name = "Arise-Shadow-Hunt",
-        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Arise-Shadow-Hunt.lua"
+        url = "https://api.luarmor.net/files/v3/loaders/595828b9a7e9744b44904048c7337210.lua"
     },
     [93978595733734] = {
         name = "Violence-District",
