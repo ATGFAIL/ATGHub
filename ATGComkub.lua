@@ -55,6 +55,10 @@ local allowedPlaces = {
     [118915549367482] = {
         name = "Dont-Wake-the-Brainrots",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dont-Wake-the-Brainrots.lua"
+    },
+    [10449761463] = {
+        name = "The-Strongest-Battlegrounds",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/The-Strongest-Battlegrounds.lua"
     }
 }
 
