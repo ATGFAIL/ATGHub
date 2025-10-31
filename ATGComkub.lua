@@ -44,6 +44,10 @@ local allowedPlaces = {
         name = "Grow-a-Garden",
         url = "https://api.luarmor.net/files/v3/loaders/30c274d8989e8c01a8c8fa3511756d0b.lua"
     },
+    [124977557560410] = {
+        name = "Grow-a-Garden",
+        url = "https://api.luarmor.net/files/v3/loaders/30c274d8989e8c01a8c8fa3511756d0b.lua"
+    },
     [122826953758426] = {
         name = "Raise-Animals",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Raise-Animals.lua"
