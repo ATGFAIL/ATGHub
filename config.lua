@@ -1,11 +1,3 @@
--- InterfaceManager.lua
--- Replacement InterfaceManager module compatible with Fluent usage:
--- Usage:
--- local InterfaceManager = require(path.to.InterfaceManager)
--- InterfaceManager:SetLibrary(Fluent)
--- InterfaceManager:SetFolder("MyFolder")
--- InterfaceManager:BuildInterfaceSection(tab)
-
 local HttpService = game:GetService("HttpService")
 
 local InterfaceManager = {}
