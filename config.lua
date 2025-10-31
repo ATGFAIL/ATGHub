@@ -485,10 +485,15 @@ end
 
 -- expose Themes for direct access
 InterfaceManager.Themes = Themes
+print("---- Fluent API ----")
+for k,v in pairs(Fluent) do print(k, type(v)) end
+if Fluent.Window then
+    print("Fluent.Window methods:")
+    for k,v in pairs(Fluent.Window) do print("  ", k, type(v)) end
+end
+if Fluent.Themes then
+    print("Fluent.Themes:", table.concat(Fluent.Themes.Names or {}, ", "))
+end
 
--- allow user code to override hook callbacks:
--- InterfaceManager.OnThemeChanged = function(name, themeTable) end
--- InterfaceManager.OnAcrylicToggled = function(bool) end
--- InterfaceManager.OnTransparencyToggled = function(bool) end
 
 return InterfaceManager
