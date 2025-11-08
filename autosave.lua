@@ -2,7 +2,7 @@ local httpService = game:GetService("HttpService")
 local runService = game:GetService("RunService")
 
 local SaveManager = {} do
-	SaveManager.Folder = "FluentSettings"
+	SaveManager.Folder = "ATGSaveSetting"
 	SaveManager.Ignore = {}
 	SaveManager.AutoSaveEnabled = true
 	SaveManager.AutoLoadEnabled = true
