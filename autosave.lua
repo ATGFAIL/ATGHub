@@ -1,11 +1,14 @@
 local httpService = game:GetService("HttpService")
-local Workspace = game:GetService("Workspace")
+local runService = game:GetService("RunService")
 
 local SaveManager = {} do
-	-- root folder (can be changed via SetFolder)
-	SaveManager.FolderRoot = "ATGSettings"
+	SaveManager.Folder = "FluentSettings"
 	SaveManager.Ignore = {}
-	SaveManager.Options = {}
+	SaveManager.AutoSaveEnabled = true
+	SaveManager.AutoLoadEnabled = true
+	SaveManager.SaveDebounce = false
+	SaveManager.SaveDelay = 0.5 -- ดีเลย์ในการบันทึกหลังจากมีการเปลี่ยนแปลง (วินาที)
+	
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -69,101 +72,6 @@ local SaveManager = {} do
 		},
 	}
 
-	-- helpers
-	local function sanitizeFilename(name)
-		name = tostring(name or "")
-		name = name:gsub("%s+", "_")
-		name = name:gsub("[^%w%-%_]", "")
-		if name == "" then return "Unknown" end
-		return name
-	end
-
-	local function getPlaceId()
-		local ok, id = pcall(function() return tostring(game.PlaceId) end)
-		if ok and id then return id end
-		return "UnknownPlace"
-	end
-
-	local function getMapName()
-		local ok, map = pcall(function() return Workspace:FindFirstChild("Map") end)
-		if ok and map and map:IsA("Instance") then
-			return sanitizeFilename(map.Name)
-		end
-		local ok2, wname = pcall(function() return Workspace.Name end)
-		if ok2 and wname then return sanitizeFilename(wname) end
-		return "UnknownMap"
-	end
-
-	local function ensureFolder(path)
-		if not isfolder(path) then
-			makefolder(path)
-		end
-	end
-
-	-- get configs folder for current place/map
-	local function getConfigsFolder(self)
-		local root = self.FolderRoot
-		local placeId = getPlaceId()
-		local mapName = getMapName()
-		-- FluentSettings/<PlaceId>/<MapName>/settings
-		return root .. "/" .. placeId .. "/" .. mapName .. "/settings"
-	end
-
-	local function getConfigFilePath(self, name)
-		local folder = getConfigsFolder(self)
-		return folder .. "/" .. name .. ".json"
-	end
-
-	-- Build folder tree and migrate legacy configs if found (copy only)
-	function SaveManager:BuildFolderTree()
-		local root = self.FolderRoot
-		ensureFolder(root)
-
-		local placeId = getPlaceId()
-		local placeFolder = root .. "/" .. placeId
-		ensureFolder(placeFolder)
-
-		local mapName = getMapName()
-		local mapFolder = placeFolder .. "/" .. mapName
-		ensureFolder(mapFolder)
-
-		local settingsFolder = mapFolder .. "/settings"
-		ensureFolder(settingsFolder)
-
-		-- legacy folder: <root>/settings (old layout). If files exist there, copy them into current map settings
-		local legacySettingsFolder = root .. "/settings"
-		if isfolder(legacySettingsFolder) then
-			local files = listfiles(legacySettingsFolder)
-			for i = 1, #files do
-				local f = files[i]
-				if f:sub(-5) == ".json" then
-					local base = f:match("([^/\\]+)%.json$")
-					if base and base ~= "options" then
-						local dest = settingsFolder .. "/" .. base .. ".json"
-						-- copy only if destination does not exist yet
-						if not isfile(dest) then
-							local ok, data = pcall(readfile, f)
-							if ok and data then
-								local success, err = pcall(writefile, dest, data)
-								-- ignore write errors but do not fail
-							end
-						end
-					end
-				end
-			end
-
-			-- also migrate autoload.txt if present (copy only)
-			local autopath = legacySettingsFolder .. "/autoload.txt"
-			if isfile(autopath) then
-				local autodata = readfile(autopath)
-				local destAuto = settingsFolder .. "/autoload.txt"
-				if not isfile(destAuto) then
-					pcall(writefile, destAuto, autodata)
-				end
-			end
-		end
-	end
-
 	function SaveManager:SetIgnoreIndexes(list)
 		for _, key in next, list do
 			self.Ignore[key] = true
@@ -171,22 +79,61 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:SetFolder(folder)
-		self.FolderRoot = tostring(folder or "FluentSettings")
+		self.Folder = folder
 		self:BuildFolderTree()
 	end
 
-	function SaveManager:SetLibrary(library)
-		self.Library = library
-		self.Options = library.Options
+	function SaveManager:GetConfigPath()
+		local placeId = game.PlaceId
+		return self.Folder .. "/MapConfig." .. placeId .. ".json"
 	end
 
-	function SaveManager:Save(name)
-		if (not name) then
-			return false, "no config file is selected"
+	function SaveManager:GetSettingsPath()
+		return self.Folder .. "/SaveSetting.json"
+	end
+
+	function SaveManager:LoadSettings()
+		local settingsPath = self:GetSettingsPath()
+		if isfile(settingsPath) then
+			local success, decoded = pcall(function()
+				return httpService:JSONDecode(readfile(settingsPath))
+			end)
+			
+			if success and decoded then
+				self.AutoSaveEnabled = decoded.AutoSave ~= false
+				self.AutoLoadEnabled = decoded.AutoLoad ~= false
+			end
 		end
+	end
 
-		local fullPath = getConfigFilePath(self, name)
+	function SaveManager:SaveSettings()
+		local settingsPath = self:GetSettingsPath()
+		local data = {
+			AutoSave = self.AutoSaveEnabled,
+			AutoLoad = self.AutoLoadEnabled
+		}
+		
+		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
+		if success then
+			writefile(settingsPath, encoded)
+		end
+	end
 
+	function SaveManager:AutoSave()
+		if not self.AutoSaveEnabled then return end
+		if self.SaveDebounce then return end
+		
+		self.SaveDebounce = true
+		task.delay(self.SaveDelay, function()
+			self:Save()
+			self.SaveDebounce = false
+		end)
+	end
+
+	function SaveManager:Save()
+		if not self.AutoSaveEnabled then return false, "auto save is disabled" end
+
+		local fullPath = self:GetConfigPath()
 		local data = { objects = {} }
 
 		for idx, option in next, SaveManager.Options do
@@ -194,35 +141,31 @@ local SaveManager = {} do
 			if self.Ignore[idx] then continue end
 
 			table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
-		end
+		end	
 
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
 		if not success then
 			return false, "failed to encode data"
 		end
 
-		-- ensure folder exists
-		local folder = fullPath:match("^(.*)/[^/]+$")
-		if folder then ensureFolder(folder) end
-
 		writefile(fullPath, encoded)
 		return true
 	end
 
-	function SaveManager:Load(name)
-		if (not name) then
-			return false, "no config file is selected"
-		end
-
-		local file = getConfigFilePath(self, name)
-		if not isfile(file) then return false, "invalid file" end
+	function SaveManager:Load()
+		if not self.AutoLoadEnabled then return false, "auto load is disabled" end
+		
+		local file = self:GetConfigPath()
+		if not isfile(file) then return false, "config file not found" end
 
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
-				task.spawn(function() self.Parser[option.type].Load(option.idx, option) end)
+				task.spawn(function() 
+					self.Parser[option.type].Load(option.idx, option) 
+				end)
 			end
 		end
 
@@ -230,169 +173,133 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:IgnoreThemeSettings()
-		self:SetIgnoreIndexes({
+		self:SetIgnoreIndexes({ 
 			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"
 		})
 	end
 
-	function SaveManager:RefreshConfigList()
-		local folder = getConfigsFolder(self)
-		if not isfolder(folder) then
-			return {}
+	function SaveManager:BuildFolderTree()
+		if not isfolder(self.Folder) then
+			makefolder(self.Folder)
 		end
-		local list = listfiles(folder)
-		local out = {}
-		for i = 1, #list do
-			local file = list[i]
-			if file:sub(-5) == ".json" then
-				local name = file:match("([^/\\]+)%.json$")
-				if name and name ~= "options" then
-					table.insert(out, name)
-				end
-			end
-		end
-		return out
 	end
 
-	function SaveManager:LoadAutoloadConfig()
-		local autopath = getConfigsFolder(self) .. "/autoload.txt"
-		if isfile(autopath) then
-			local name = readfile(autopath)
-			local success, err = self:Load(name)
-			if not success then
-				return self.Library:Notify({
-					Title = "Interface",
-					Content = "Config loader",
-					SubContent = "Failed to load autoload config: " .. err,
-					Duration = 7
-				})
-			end
+	function SaveManager:SetLibrary(library)
+		self.Library = library
+		self.Options = library.Options
+	end
 
-			self.Library:Notify({
+	function SaveManager:SetupAutoSave()
+		-- เชื่อมต่อกับทุก Options ให้บันทึกอัตโนมัติเมื่อมีการเปลี่ยนแปลง
+		for idx, option in pairs(self.Options) do
+			if self.Ignore[idx] then continue end
+			
+			if option.Changed then
+				option:Changed(function()
+					self:AutoSave()
+				end)
+			elseif option.OnChanged then
+				option:OnChanged(function()
+					self:AutoSave()
+				end)
+			end
+		end
+	end
+
+	function SaveManager:LoadAutoConfig()
+		-- โหลด Settings ก่อน
+		self:LoadSettings()
+		
+		if not self.AutoLoadEnabled then 
+			return self.Library:Notify({
 				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Auto loaded config %q", name),
-				Duration = 7
+				Content = "Config Loader",
+				SubContent = "Auto load is disabled",
+				Duration = 5
 			})
 		end
+
+		local success, err = self:Load()
+		if not success then
+			return self.Library:Notify({
+				Title = "Interface",
+				Content = "Config Loader",
+				SubContent = "Failed to auto load: " .. err,
+				Duration = 5
+			})
+		end
+
+		self.Library:Notify({
+			Title = "Interface",
+			Content = "Config Loader",
+			SubContent = "Auto loaded config for Place ID: " .. game.PlaceId,
+			Duration = 5
+		})
 	end
 
 	function SaveManager:BuildConfigSection(tab)
 		assert(self.Library, "Must set SaveManager.Library")
 
-		local section = tab:AddSection("Configuration")
+		local section = tab:AddSection("Auto Save Configuration")
 
-		section:AddInput("SaveManager_ConfigName",    { Title = "Config name" })
-		section:AddDropdown("SaveManager_ConfigList", { Title = "Config list", Values = self:RefreshConfigList(), AllowNull = true })
-
-		section:AddButton({
-			Title = "Create config",
-			Callback = function()
-				local name = SaveManager.Options.SaveManager_ConfigName.Value
-
-				if name:gsub(" ", "") == "" then
-					return self.Library:Notify({
+		-- Toggle Auto Save
+		local autoSaveToggle = section:AddToggle("AutoSaveToggle", {
+			Title = "Auto Save",
+			Description = "Automatically save settings in real-time",
+			Default = self.AutoSaveEnabled,
+			Callback = function(value)
+				self.AutoSaveEnabled = value
+				self:SaveSettings()
+				
+				if value then
+					self:Save()
+					self.Library:Notify({
 						Title = "Interface",
-						Content = "Config loader",
-						SubContent = "Invalid config name (empty)",
-						Duration = 7
+						Content = "Config Loader",
+						SubContent = "Auto save enabled",
+						Duration = 3
+					})
+				else
+					self.Library:Notify({
+						Title = "Interface",
+						Content = "Config Loader",
+						SubContent = "Auto save disabled",
+						Duration = 3
 					})
 				end
-
-				local success, err = self:Save(name)
-				if not success then
-					return self.Library:Notify({
-						Title = "Interface",
-						Content = "Config loader",
-						SubContent = "Failed to save config: " .. err,
-						Duration = 7
-					})
-				end
-
-				self.Library:Notify({
-					Title = "Interface",
-					Content = "Config loader",
-					SubContent = string.format("Created config %q", name),
-					Duration = 7
-				})
-
-				SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-				SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
 			end
 		})
 
-		section:AddButton({Title = "Load config", Callback = function()
-			local name = SaveManager.Options.SaveManager_ConfigList.Value
-
-			local success, err = self:Load(name)
-			if not success then
-				return self.Library:Notify({
+		-- Toggle Auto Load
+		local autoLoadToggle = section:AddToggle("AutoLoadToggle", {
+			Title = "Auto Load",
+			Description = "Automatically load settings on startup",
+			Default = self.AutoLoadEnabled,
+			Callback = function(value)
+				self.AutoLoadEnabled = value
+				self:SaveSettings()
+				
+				self.Library:Notify({
 					Title = "Interface",
-					Content = "Config loader",
-					SubContent = "Failed to load config: " .. err,
-					Duration = 7
+					Content = "Config Loader",
+					SubContent = "Auto load " .. (value and "enabled" or "disabled"),
+					Duration = 3
 				})
 			end
+		})
 
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Loaded config %q", name),
-				Duration = 7
-			})
-		end})
+		-- ข้อมูลเพิ่มเติม
+		section:AddParagraph({
+			Title = "Info",
+			Content = "Config file: MapConfig." .. game.PlaceId .. ".json\n" ..
+					 "Settings are saved automatically when changed.\n" ..
+					 "Config is specific to this Place ID."
+		})
 
-		section:AddButton({Title = "Overwrite config", Callback = function()
-			local name = SaveManager.Options.SaveManager_ConfigList.Value
-
-			local success, err = self:Save(name)
-			if not success then
-				return self.Library:Notify({
-					Title = "Interface",
-					Content = "Config loader",
-					SubContent = "Failed to overwrite config: " .. err,
-					Duration = 7
-				})
-			end
-
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Overwrote config %q", name),
-				Duration = 7
-			})
-		end})
-
-		section:AddButton({Title = "Refresh list", Callback = function()
-			SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-			SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
-		end})
-
-		local AutoloadButton
-		AutoloadButton = section:AddButton({Title = "Set as autoload", Description = "Current autoload config: none", Callback = function()
-			local name = SaveManager.Options.SaveManager_ConfigList.Value
-			local autopath = getConfigsFolder(self) .. "/autoload.txt"
-			writefile(autopath, name)
-			AutoloadButton:SetDesc("Current autoload config: " .. name)
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Set %q to auto load", name),
-				Duration = 7
-			})
-		end})
-
-		-- populate current autoload desc if exists
-		local autop = getConfigsFolder(self) .. "/autoload.txt"
-		if isfile(autop) then
-			local name = readfile(autop)
-			AutoloadButton:SetDesc("Current autoload config: " .. name)
-		end
-
-		SaveManager:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
+		-- เพิ่ม Toggle เข้า Ignore list
+		self:SetIgnoreIndexes({ "AutoSaveToggle", "AutoLoadToggle" })
 	end
 
-	-- initial build
 	SaveManager:BuildFolderTree()
 end
 
