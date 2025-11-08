@@ -28,26 +28,11 @@ local SaveManager = {} do
 		},
 		Dropdown = {
 			Save = function(idx, object)
-				-- แก้ไข: เก็บค่า Multi ด้วยเพื่อรองรับ Multi-select dropdown
-				return { 
-					type = "Dropdown", 
-					idx = idx, 
-					value = object.Value, 
-					multi = object.Multi 
-				}
+				return { type = "Dropdown", idx = idx, value = object.Value, mutli = object.Multi }
 			end,
 			Load = function(idx, data)
 				if SaveManager.Options[idx] then 
-					-- รองรับทั้ง single และ multi-select
-					if data.multi and type(data.value) == "table" then
-						-- Multi-select: ตั้งค่าทีละตัว
-						for key, val in pairs(data.value) do
-							SaveManager.Options[idx]:SetValue(key, val)
-						end
-					else
-						-- Single-select
-						SaveManager.Options[idx]:SetValue(data.value)
-					end
+					SaveManager.Options[idx]:SetValue(data.value)
 				end
 			end,
 		},
@@ -71,6 +56,7 @@ local SaveManager = {} do
 				end
 			end,
 		},
+
 		Input = {
 			Save = function(idx, object)
 				return { type = "Input", idx = idx, text = object.Value }
