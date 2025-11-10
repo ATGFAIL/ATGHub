@@ -404,33 +404,39 @@ local SaveManager = {} do
 		})
 
 		-- สร้าง AutoSave.json ถ้าไม่มีไฟล์เลย
+		local shouldEnableAutoLoad = false
+		local shouldEnableAutoSave = false
+		
 		if #configs == 0 then
 			local success = self:Save("AutoSave")
 			if success then
 				configs = self:RefreshConfigList()
 				ConfigListDropdown:SetValues(configs)
 				ConfigListDropdown:SetValue("AutoSave")
+				self.AutoSaveConfig = "AutoSave"
 				
-				if uiSettings then
-					self.AutoSaveConfig = "AutoSave"
-					self.AutoSaveEnabled = uiSettings.autosave_enabled or false
-				end
+				-- เปิด Auto Load และ Auto Save เริ่มต้น
+				self:SetAutoloadConfig("AutoSave")
+				shouldEnableAutoLoad = true
+				shouldEnableAutoSave = true
 			end
-		elseif uiSettings and uiSettings.autosave_config then
-			-- โหลดค่า autosave config จาก UI settings
-			ConfigListDropdown:SetValue(uiSettings.autosave_config)
-			self.AutoSaveConfig = uiSettings.autosave_config
-			self.AutoSaveEnabled = uiSettings.autosave_enabled or false
+		elseif uiSettings then
+			-- โหลดค่าจาก UI settings
+			if uiSettings.autosave_config then
+				ConfigListDropdown:SetValue(uiSettings.autosave_config)
+				self.AutoSaveConfig = uiSettings.autosave_config
+			end
+			shouldEnableAutoSave = uiSettings.autosave_enabled or false
+			shouldEnableAutoLoad = self:GetAutoloadConfig() ~= nil
 		end
 
 		-- Autoload Toggle
 		local currentAutoload = self:GetAutoloadConfig()
-		local autoloadDesc = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or "ไม่มีคอนฟิกโหลดอัตโนมัติ"
 		
 		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "🔄 Auto Load",
-			Description = autoloadDesc,
-			Default = currentAutoload ~= nil,
+			Description = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or "ไม่มีคอนฟิกโหลดอัตโนมัติ",
+			Default = shouldEnableAutoLoad,
 			Callback = function(value)
 				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
 				
@@ -441,19 +447,27 @@ local SaveManager = {} do
 					end
 
 					self:SetAutoloadConfig(selectedConfig)
+					-- อัพเดท Description แบบ Dynamic
+					local toggleObj = SaveManager.Options.SaveManager_AutoloadToggle
+					if toggleObj and toggleObj.SetDescription then
+						toggleObj:SetDescription('ปัจจุบัน: "' .. selectedConfig .. '"')
+					end
 				else
 					self:DisableAutoload()
+					-- อัพเดท Description แบบ Dynamic
+					local toggleObj = SaveManager.Options.SaveManager_AutoloadToggle
+					if toggleObj and toggleObj.SetDescription then
+						toggleObj:SetDescription("ไม่มีคอนฟิกโหลดอัตโนมัติ")
+					end
 				end
 			end
 		})
 
 		-- Auto Save Toggle
-		local autosaveDesc = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. self.AutoSaveConfig .. '"') or "เลือกคอนฟิกเพื่อเปิดใช้งาน"
-		
 		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
 			Title = "💾 Auto Save",
-			Description = autosaveDesc,
-			Default = self.AutoSaveEnabled,
+			Description = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. self.AutoSaveConfig .. '"') or "เลือกคอนฟิกเพื่อเปิดใช้งาน",
+			Default = shouldEnableAutoSave,
 			Callback = function(value)
 				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
 				
@@ -464,17 +478,35 @@ local SaveManager = {} do
 					end
 
 					self:EnableAutoSave(selectedConfig)
+					-- อัพเดท Description แบบ Dynamic
+					local toggleObj = SaveManager.Options.SaveManager_AutoSaveToggle
+					if toggleObj and toggleObj.SetDescription then
+						toggleObj:SetDescription('กำลังบันทึกอัตโนมัติไปที่: "' .. selectedConfig .. '"')
+					end
 				else
 					self:DisableAutoSave()
+					-- อัพเดท Description แบบ Dynamic
+					local toggleObj = SaveManager.Options.SaveManager_AutoSaveToggle
+					if toggleObj and toggleObj.SetDescription then
+						toggleObj:SetDescription("เลือกคอนฟิกเพื่อเปิดใช้งาน")
+					end
 				end
 			end
 		})
 
 		-- เมื่อเลือก config ใน dropdown
 		ConfigListDropdown:OnChanged(function(value)
-			if value and self.AutoSaveEnabled then
-				self.AutoSaveConfig = value
-				self:SaveUI()
+			if value then
+				-- อัพเดท Auto Save config
+				if self.AutoSaveEnabled then
+					self.AutoSaveConfig = value
+					self:SaveUI()
+					-- อัพเดท Description
+					local toggleObj = SaveManager.Options.SaveManager_AutoSaveToggle
+					if toggleObj and toggleObj.SetDescription then
+						toggleObj:SetDescription('กำลังบันทึกอัตโนมัติไปที่: "' .. value .. '"')
+					end
+				end
 			end
 		end)
 
@@ -543,6 +575,22 @@ local SaveManager = {} do
 								if self.AutoSaveConfig == name then
 									self:DisableAutoSave()
 									SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
+									-- อัพเดท Description
+									local toggleObj = SaveManager.Options.SaveManager_AutoSaveToggle
+									if toggleObj and toggleObj.SetDescription then
+										toggleObj:SetDescription("เลือกคอนฟิกเพื่อเปิดใช้งาน")
+									end
+								end
+								
+								-- Update autoload if deleted config was autoload
+								if self:GetAutoloadConfig() == name then
+									self:DisableAutoload()
+									SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
+									-- อัพเดท Description
+									local toggleObj = SaveManager.Options.SaveManager_AutoloadToggle
+									if toggleObj and toggleObj.SetDescription then
+										toggleObj:SetDescription("ไม่มีคอนฟิกโหลดอัตโนมัติ")
+									end
 								end
 								
 								-- บันทึก UI
@@ -577,10 +625,9 @@ local SaveManager = {} do
 			"SaveManager_AutoSaveToggle"
 		})
 
-		-- โหลด UI settings และเปิดใช้ auto save ถ้าเคยเปิดไว้
-		if uiSettings and uiSettings.autosave_enabled and uiSettings.autosave_config then
-			self:EnableAutoSave(uiSettings.autosave_config)
-			SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+		-- เปิดใช้งาน auto save ถ้าต้องการ
+		if shouldEnableAutoSave and self.AutoSaveConfig then
+			self:EnableAutoSave(self.AutoSaveConfig)
 		end
 	end
 
