@@ -325,26 +325,11 @@ local SaveManager = {} do
 	function SaveManager:LoadAutoloadConfig()
 		local name = self:GetAutoloadConfig()
 		if name then
-			local success, err = self:Load(name)
-			if not success then
-				return self.Library:Notify({
-					Title = "Config Loader",
-					Content = "ล้มเหลวในการโหลดคอนฟิกอัตโนมัติ",
-					SubContent = err,
-					Duration = 5
-				})
-			end
-
-			self.Library:Notify({
-				Title = "Config Loader",
-				Content = "โหลดอัตโนมัติสำเร็จ",
-				SubContent = string.format('โหลด "%s" แล้ว', name),
-				Duration = 3
-			})
+			self:Load(name)
 		end
 	end
 
-	-- ฟังก์ชัน Auto Save (แก้ไข Stack Overflow)
+	-- ฟังก์ชัน Auto Save
 	function SaveManager:EnableAutoSave(configName)
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
@@ -452,42 +437,12 @@ local SaveManager = {} do
 				if value then
 					if not selectedConfig then
 						SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
-						return self.Library:Notify({
-							Title = "Config Loader",
-							Content = "เกิดข้อผิดพลาด",
-							SubContent = "กรุณาเลือกคอนฟิกก่อน",
-							Duration = 3
-						})
+						return
 					end
 
-					local success, err = self:SetAutoloadConfig(selectedConfig)
-					if success then
-						self:SaveUI()
-						self.Library:Notify({
-							Title = "Config Loader",
-							Content = "เปิดโหลดอัตโนมัติแล้ว",
-							SubContent = string.format('"%s" จะโหลดอัตโนมัติทุกครั้ง', selectedConfig),
-							Duration = 3
-						})
-					else
-						SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
-						self.Library:Notify({
-							Title = "Config Loader",
-							Content = "เกิดข้อผิดพลาด",
-							SubContent = err or "ไม่สามารถตั้งค่าโหลดอัตโนมัติได้",
-							Duration = 3
-						})
-					end
+					self:SetAutoloadConfig(selectedConfig)
 				else
-					local success, err = self:DisableAutoload()
-					if success then
-						self.Library:Notify({
-							Title = "Config Loader",
-							Content = "ปิดโหลดอัตโนมัติแล้ว",
-							SubContent = "คอนฟิกจะไม่โหลดอัตโนมัติอีกต่อไป",
-							Duration = 3
-						})
-					end
+					self:DisableAutoload()
 				end
 			end
 		})
@@ -505,42 +460,23 @@ local SaveManager = {} do
 				if value then
 					if not selectedConfig then
 						SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
-						return self.Library:Notify({
-							Title = "Config Loader",
-							Content = "เกิดข้อผิดพลาด",
-							SubContent = "กรุณาเลือกคอนฟิกก่อน",
-							Duration = 3
-						})
+						return
 					end
 
 					self:EnableAutoSave(selectedConfig)
-					
-					self.Library:Notify({
-						Title = "Config Loader",
-						Content = "เปิดบันทึกอัตโนมัติแล้ว",
-						SubContent = string.format('การตั้งค่าจะบันทึกไปที่ "%s" อัตโนมัติ', selectedConfig),
-						Duration = 3
-					})
 				else
 					self:DisableAutoSave()
-					
-					self.Library:Notify({
-						Title = "Config Loader",
-						Content = "ปิดบันทึกอัตโนมัติแล้ว",
-						SubContent = "จะไม่บันทึกอัตโนมัติอีกต่อไป",
-						Duration = 3
-					})
 				end
 			end
 		})
 
 		-- เมื่อเลือก config ใน dropdown
-		ConfigListDropdown.Changed = function(value)
+		ConfigListDropdown:OnChanged(function(value)
 			if value and self.AutoSaveEnabled then
 				self.AutoSaveConfig = value
 				self:SaveUI()
 			end
-		end
+		end)
 
 		section:AddButton({
 			Title = "💾 Save New Config",
@@ -549,30 +485,13 @@ local SaveManager = {} do
 				local name = SaveManager.Options.SaveManager_ConfigName.Value
 
 				if name:gsub(" ", "") == "" then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "ชื่อไม่ถูกต้อง",
-						SubContent = "ชื่อคอนฟิกต้องไม่เป็นค่าว่าง",
-						Duration = 3
-					})
+					return
 				end
 
 				local success, err = self:Save(name)
 				if not success then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "บันทึกล้มเหลว",
-						SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
-						Duration = 5
-					})
+					return
 				end
-
-				self.Library:Notify({
-					Title = "Config Loader",
-					Content = "บันทึกคอนฟิกแล้ว",
-					SubContent = string.format('สร้าง "%s" เรียบร้อย', name),
-					Duration = 3
-				})
 
 				ConfigListDropdown:SetValues(self:RefreshConfigList())
 				ConfigListDropdown:SetValue(name)
@@ -586,30 +505,10 @@ local SaveManager = {} do
 				local name = SaveManager.Options.SaveManager_ConfigList.Value
 
 				if not name then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "ไม่ได้เลือกคอนฟิก",
-						SubContent = "กรุณาเลือกคอนฟิกที่ต้องการโหลด",
-						Duration = 3
-					})
+					return
 				end
 
-				local success, err = self:Load(name)
-				if not success then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "โหลดล้มเหลว",
-						SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
-						Duration = 5
-					})
-				end
-
-				self.Library:Notify({
-					Title = "Config Loader",
-					Content = "โหลดคอนฟิกแล้ว",
-					SubContent = string.format('โหลด "%s" เรียบร้อย', name),
-					Duration = 3
-				})
+				self:Load(name)
 			end
 		})
 
@@ -620,12 +519,7 @@ local SaveManager = {} do
 				local name = SaveManager.Options.SaveManager_ConfigList.Value
 
 				if not name then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "ไม่ได้เลือกคอนฟิก",
-						SubContent = "กรุณาเลือกคอนฟิกที่ต้องการลบ",
-						Duration = 3
-					})
+					return
 				end
 
 				-- Confirmation dialog
@@ -638,20 +532,8 @@ local SaveManager = {} do
 							Callback = function()
 								local success, err = self:Delete(name)
 								if not success then
-									return self.Library:Notify({
-										Title = "Config Loader",
-										Content = "ลบล้มเหลว",
-										SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
-										Duration = 5
-									})
+									return
 								end
-
-								self.Library:Notify({
-									Title = "Config Loader",
-									Content = "ลบคอนฟิกแล้ว",
-									SubContent = string.format('ลบ "%s" เรียบร้อย', name),
-									Duration = 3
-								})
 
 								-- Update dropdown
 								ConfigListDropdown:SetValues(self:RefreshConfigList())
@@ -670,7 +552,6 @@ local SaveManager = {} do
 						{
 							Title = "ยกเลิก",
 							Callback = function() 
-								-- ไม่ทำอะไร
 							end
 						}
 					}
@@ -685,13 +566,6 @@ local SaveManager = {} do
 				local configs = self:RefreshConfigList()
 				ConfigListDropdown:SetValues(configs)
 				ConfigListDropdown:SetValue(nil)
-				
-				self.Library:Notify({
-					Title = "Config Loader",
-					Content = "รีเฟรชรายการแล้ว",
-					SubContent = string.format("พบ %d คอนฟิก", #configs),
-					Duration = 2
-				})
 			end
 		})
 
