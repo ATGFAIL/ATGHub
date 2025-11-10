@@ -7,6 +7,8 @@ local SaveManager = {} do
 	SaveManager.Options = {}
 	SaveManager.AutoSaveEnabled = false
 	SaveManager.AutoSaveConfig = nil
+	SaveManager.AutoSaveDebounce = false
+	SaveManager.OriginalCallbacks = {}
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -342,30 +344,36 @@ local SaveManager = {} do
 		end
 	end
 
-	-- ฟังก์ชัน Auto Save
+	-- ฟังก์ชัน Auto Save (แก้ไข Stack Overflow)
 	function SaveManager:EnableAutoSave(configName)
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
 		self:SaveUI()
 		
-		-- ตั้งค่า listener สำหรับทุก option
+		-- บันทึก callback เดิมและตั้ง callback ใหม่
 		for idx, option in next, self.Options do
 			if not self.Ignore[idx] and self.Parser[option.Type] then
-				-- เก็บ callback เดิมไว้
-				local originalCallback = option.Callback
+				-- เก็บ callback เดิมไว้ถ้ายังไม่เคยเก็บ
+				if not self.OriginalCallbacks[idx] then
+					self.OriginalCallbacks[idx] = option.Callback
+				end
 				
-				-- สร้าง callback ใหม่ที่รวม auto save
+				-- สร้าง callback ใหม่
 				option.Callback = function(...)
 					-- เรียก callback เดิม
-					if originalCallback then
-						originalCallback(...)
+					if self.OriginalCallbacks[idx] then
+						self.OriginalCallbacks[idx](...)
 					end
 					
-					-- Auto save
-					if self.AutoSaveEnabled and self.AutoSaveConfig then
+					-- Auto save ด้วย debounce
+					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
+						self.AutoSaveDebounce = true
 						task.spawn(function()
-							task.wait(0.5) -- รอเล็กน้อยเพื่อไม่ให้เซฟบ่อยเกินไป
-							self:Save(self.AutoSaveConfig)
+							task.wait(1) -- รอ 1 วินาทีก่อนเซฟ
+							if self.AutoSaveEnabled and self.AutoSaveConfig then
+								self:Save(self.AutoSaveConfig)
+							end
+							self.AutoSaveDebounce = false
 						end)
 					end
 				end
@@ -377,6 +385,13 @@ local SaveManager = {} do
 		self.AutoSaveEnabled = false
 		self.AutoSaveConfig = nil
 		self:SaveUI()
+		
+		-- คืนค่า callback เดิม
+		for idx, option in next, self.Options do
+			if self.OriginalCallbacks[idx] then
+				option.Callback = self.OriginalCallbacks[idx]
+			end
+		end
 	end
 
 	function SaveManager:BuildConfigSection(tab)
@@ -423,11 +438,13 @@ local SaveManager = {} do
 			self.AutoSaveEnabled = uiSettings.autosave_enabled or false
 		end
 
-		-- Autoload Status Display
+		-- Autoload Toggle
 		local currentAutoload = self:GetAutoloadConfig()
+		local autoloadDesc = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or "ไม่มีคอนฟิกโหลดอัตโนมัติ"
+		
 		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "🔄 Auto Load",
-			Description = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or "ไม่มีคอนฟิกโหลดอัตโนมัติ",
+			Description = autoloadDesc,
 			Default = currentAutoload ~= nil,
 			Callback = function(value)
 				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
@@ -445,7 +462,7 @@ local SaveManager = {} do
 
 					local success, err = self:SetAutoloadConfig(selectedConfig)
 					if success then
-						AutoloadToggle.Description = 'ปัจจุบัน: "' .. selectedConfig .. '"'
+						self:SaveUI()
 						self.Library:Notify({
 							Title = "Config Loader",
 							Content = "เปิดโหลดอัตโนมัติแล้ว",
@@ -464,7 +481,6 @@ local SaveManager = {} do
 				else
 					local success, err = self:DisableAutoload()
 					if success then
-						AutoloadToggle.Description = "ไม่มีคอนฟิกโหลดอัตโนมัติ"
 						self.Library:Notify({
 							Title = "Config Loader",
 							Content = "ปิดโหลดอัตโนมัติแล้ว",
@@ -476,10 +492,12 @@ local SaveManager = {} do
 			end
 		})
 
-		-- Auto Save Toggle (แทนที่ปุ่ม Overwrite)
+		-- Auto Save Toggle
+		local autosaveDesc = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. self.AutoSaveConfig .. '"') or "เลือกคอนฟิกเพื่อเปิดใช้งาน"
+		
 		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
 			Title = "💾 Auto Save",
-			Description = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. self.AutoSaveConfig .. '"') or "เลือกคอนฟิกเพื่อเปิดใช้งาน",
+			Description = autosaveDesc,
 			Default = self.AutoSaveEnabled,
 			Callback = function(value)
 				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
@@ -496,7 +514,6 @@ local SaveManager = {} do
 					end
 
 					self:EnableAutoSave(selectedConfig)
-					AutoSaveToggle.Description = 'กำลังบันทึกอัตโนมัติไปที่: "' .. selectedConfig .. '"'
 					
 					self.Library:Notify({
 						Title = "Config Loader",
@@ -506,27 +523,22 @@ local SaveManager = {} do
 					})
 				else
 					self:DisableAutoSave()
-					AutoSaveToggle.Description = "เลือกคอนฟิกเพื่อเปิดใช้งาน"
 					
 					self.Library:Notify({
 						Title = "Config Loader",
 						Content = "ปิดบันทึกอัตโนมัติแล้ว",
 						SubContent = "จะไม่บันทึกอัตโนมัติอีกต่อไป",
 						Duration = 3
-						})
+					})
 				end
 			end
 		})
 
 		-- เมื่อเลือก config ใน dropdown
 		ConfigListDropdown.Changed = function(value)
-			if value then
-				-- อัพเดท Auto Save
-				if self.AutoSaveEnabled then
-					self.AutoSaveConfig = value
-					AutoSaveToggle.Description = 'กำลังบันทึกอัตโนมัติไปที่: "' .. value .. '"'
-					self:SaveUI()
-				end
+			if value and self.AutoSaveEnabled then
+				self.AutoSaveConfig = value
+				self:SaveUI()
 			end
 		end
 
@@ -641,31 +653,25 @@ local SaveManager = {} do
 									Duration = 3
 								})
 
-								-- Update UI
+								-- Update dropdown
 								ConfigListDropdown:SetValues(self:RefreshConfigList())
 								ConfigListDropdown:SetValue(nil)
-								
-								-- Update autoload toggle if deleted config was autoload
-								local currentAutoload = self:GetAutoloadConfig()
-								if currentAutoload then
-									SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
-									AutoloadToggle.Description = 'ปัจจุบัน: "' .. currentAutoload .. '"'
-								else
-									SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
-									AutoloadToggle.Description = "ไม่มีคอนฟิกโหลดอัตโนมัติ"
-								end
 								
 								-- Update autosave if deleted config was autosave
 								if self.AutoSaveConfig == name then
 									self:DisableAutoSave()
 									SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
-									AutoSaveToggle.Description = "เลือกคอนฟิกเพื่อเปิดใช้งาน"
 								end
+								
+								-- บันทึก UI
+								self:SaveUI()
 							end
 						},
 						{
 							Title = "ยกเลิก",
-							Callback = function() end
+							Callback = function() 
+								-- ไม่ทำอะไร
+							end
 						}
 					}
 				})
