@@ -459,7 +459,7 @@ local SaveManager = {} do
 				
 				if value then
 					if not selectedConfig then
-						SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
+						SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
 						return
 					end
 
@@ -577,10 +577,21 @@ local SaveManager = {} do
 			"SaveManager_AutoSaveToggle"
 		})
 
-		-- โหลด UI settings และเปิดใช้ auto save ถ้าเคยเปิดไว้
-		if uiSettings and uiSettings.autosave_enabled and uiSettings.autosave_config then
-			self:EnableAutoSave(uiSettings.autosave_config)
-			SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+		-- โหลด UI settings และเปิดใช้ auto save / auto load ถ้าเคยเปิดไว้
+		if uiSettings then
+			-- Auto Load
+			if uiSettings.autoload_enabled and uiSettings.autoload_config then
+				task.spawn(function()
+					SaveManager:Load(uiSettings.autoload_config)
+					SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
+				end)
+			end
+
+			-- Auto Save
+			if uiSettings.autosave_enabled and uiSettings.autosave_config then
+				self:EnableAutoSave(uiSettings.autosave_config)
+				SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+			end
 		end
 	end
 
