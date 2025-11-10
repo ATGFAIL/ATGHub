@@ -5,6 +5,8 @@ local SaveManager = {} do
 	SaveManager.FolderRoot = "ATGSettings"
 	SaveManager.Ignore = {}
 	SaveManager.Options = {}
+	SaveManager.AutoSaveEnabled = false
+	SaveManager.AutoSaveConfig = nil
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -90,7 +92,6 @@ local SaveManager = {} do
 		end
 	end
 
-	-- เปลี่ยนโครงสร้าง: ATGSettings/PlaceId/
 	local function getConfigsFolder(self)
 		local root = self.FolderRoot
 		local placeId = getPlaceId()
@@ -102,6 +103,12 @@ local SaveManager = {} do
 		return folder .. "/" .. name .. ".json"
 	end
 
+	-- ไฟล์สำหรับเซฟ UI ของ SaveManager เอง
+	local function getSaveManagerUIPath(self)
+		local folder = getConfigsFolder(self)
+		return folder .. "/savemanager_ui.json"
+	end
+
 	function SaveManager:BuildFolderTree()
 		local root = self.FolderRoot
 		ensureFolder(root)
@@ -110,7 +117,7 @@ local SaveManager = {} do
 		local placeFolder = root .. "/" .. placeId
 		ensureFolder(placeFolder)
 
-		-- Migrate legacy configs (จากโครงสร้างเก่า)
+		-- Migrate legacy configs
 		local legacySettingsFolder = root .. "/settings"
 		if isfolder(legacySettingsFolder) then
 			local files = listfiles(legacySettingsFolder)
@@ -183,6 +190,33 @@ local SaveManager = {} do
 		return true
 	end
 
+	-- เซฟ UI ของ SaveManager แยกต่างหาก
+	function SaveManager:SaveUI()
+		local uiPath = getSaveManagerUIPath(self)
+		local uiData = {
+			autoload = self:GetAutoloadConfig(),
+			autosave_enabled = self.AutoSaveEnabled,
+			autosave_config = self.AutoSaveConfig
+		}
+
+		local success, encoded = pcall(httpService.JSONEncode, httpService, uiData)
+		if success then
+			writefile(uiPath, encoded)
+		end
+	end
+
+	-- โหลด UI ของ SaveManager
+	function SaveManager:LoadUI()
+		local uiPath = getSaveManagerUIPath(self)
+		if not isfile(uiPath) then return nil end
+
+		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(uiPath))
+		if success then
+			return decoded
+		end
+		return nil
+	end
+
 	function SaveManager:Load(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -247,6 +281,7 @@ local SaveManager = {} do
 		
 		local autopath = getConfigsFolder(self) .. "/autoload.txt"
 		writefile(autopath, name)
+		self:SaveUI()
 		return true
 	end
 
@@ -254,6 +289,7 @@ local SaveManager = {} do
 		local autopath = getConfigsFolder(self) .. "/autoload.txt"
 		if isfile(autopath) then
 			delfile(autopath)
+			self:SaveUI()
 			return true
 		end
 		return false, "no autoload config set"
@@ -276,7 +312,7 @@ local SaveManager = {} do
 			local file = list[i]
 			if file:sub(-5) == ".json" then
 				local name = file:match("([^/\\]+)%.json$")
-				if name and name ~= "options" and name ~= "autoload" then
+				if name and name ~= "options" and name ~= "autoload" and name ~= "savemanager_ui" then
 					table.insert(out, name)
 				end
 			end
@@ -291,7 +327,7 @@ local SaveManager = {} do
 			if not success then
 				return self.Library:Notify({
 					Title = "Config Loader",
-					Content = "Failed to load autoload config",
+					Content = "ล้มเหลวในการโหลดคอนฟิกอัตโนมัติ",
 					SubContent = err,
 					Duration = 5
 				})
@@ -299,11 +335,48 @@ local SaveManager = {} do
 
 			self.Library:Notify({
 				Title = "Config Loader",
-				Content = "Autoload Success",
-				SubContent = string.format('Loaded "%s"', name),
+				Content = "โหลดอัตโนมัติสำเร็จ",
+				SubContent = string.format('โหลด "%s" แล้ว', name),
 				Duration = 3
 			})
 		end
+	end
+
+	-- ฟังก์ชัน Auto Save
+	function SaveManager:EnableAutoSave(configName)
+		self.AutoSaveEnabled = true
+		self.AutoSaveConfig = configName
+		self:SaveUI()
+		
+		-- ตั้งค่า listener สำหรับทุก option
+		for idx, option in next, self.Options do
+			if not self.Ignore[idx] and self.Parser[option.Type] then
+				-- เก็บ callback เดิมไว้
+				local originalCallback = option.Callback
+				
+				-- สร้าง callback ใหม่ที่รวม auto save
+				option.Callback = function(...)
+					-- เรียก callback เดิม
+					if originalCallback then
+						originalCallback(...)
+					end
+					
+					-- Auto save
+					if self.AutoSaveEnabled and self.AutoSaveConfig then
+						task.spawn(function()
+							task.wait(0.5) -- รอเล็กน้อยเพื่อไม่ให้เซฟบ่อยเกินไป
+							self:Save(self.AutoSaveConfig)
+						end)
+					end
+				end
+			end
+		end
+	end
+
+	function SaveManager:DisableAutoSave()
+		self.AutoSaveEnabled = false
+		self.AutoSaveConfig = nil
+		self:SaveUI()
 	end
 
 	function SaveManager:BuildConfigSection(tab)
@@ -311,71 +384,91 @@ local SaveManager = {} do
 
 		local section = tab:AddSection("📁 Configuration Manager")
 
+		-- โหลด UI settings
+		local uiSettings = self:LoadUI()
+
 		-- Config Name Input
 		section:AddInput("SaveManager_ConfigName", { 
 			Title = "💾 Config Name",
-			Placeholder = "Enter config name...",
-			Description = "Type a name for your new config"
+			Placeholder = "ใส่ชื่อคอนฟิก...",
+			Description = "พิมพ์ชื่อสำหรับคอนฟิกใหม่"
 		})
 
-		-- Config List Dropdown (เก็บค่าที่เลือกไว้)
+		-- Config List Dropdown
+		local configs = self:RefreshConfigList()
 		local ConfigListDropdown = section:AddDropdown("SaveManager_ConfigList", { 
 			Title = "📋 Available Configs", 
-			Values = self:RefreshConfigList(), 
+			Values = configs, 
 			AllowNull = true,
-			Description = "Select a config to manage"
+			Description = "เลือกคอนฟิกที่ต้องการจัดการ"
 		})
+
+		-- สร้าง AutoSave.json ถ้าไม่มีไฟล์เลย
+		if #configs == 0 then
+			local success = self:Save("AutoSave")
+			if success then
+				configs = self:RefreshConfigList()
+				ConfigListDropdown:SetValues(configs)
+				ConfigListDropdown:SetValue("AutoSave")
+				
+				if uiSettings then
+					self.AutoSaveConfig = "AutoSave"
+					self.AutoSaveEnabled = uiSettings.autosave_enabled or false
+				end
+			end
+		elseif uiSettings and uiSettings.autosave_config then
+			-- โหลดค่า autosave config จาก UI settings
+			ConfigListDropdown:SetValue(uiSettings.autosave_config)
+			self.AutoSaveConfig = uiSettings.autosave_config
+			self.AutoSaveEnabled = uiSettings.autosave_enabled or false
+		end
 
 		-- Autoload Status Display
 		local currentAutoload = self:GetAutoloadConfig()
 		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "🔄 Auto Load",
-			Description = currentAutoload and ('Current: "' .. currentAutoload .. '"') or "No autoload config set",
+			Description = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or "ไม่มีคอนฟิกโหลดอัตโนมัติ",
 			Default = currentAutoload ~= nil,
 			Callback = function(value)
 				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
 				
 				if value then
-					-- เปิด Autoload
 					if not selectedConfig then
-						-- แก้ไข: ใช้ Options แทน Toggle object โดยตรง
 						SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
 						return self.Library:Notify({
 							Title = "Config Loader",
-							Content = "Error",
-							SubContent = "Please select a config first",
+							Content = "เกิดข้อผิดพลาด",
+							SubContent = "กรุณาเลือกคอนฟิกก่อน",
 							Duration = 3
 						})
 					end
 
 					local success, err = self:SetAutoloadConfig(selectedConfig)
 					if success then
-						-- แก้ไข: อัพเดท Description
-						AutoloadToggle.Description = 'Current: "' .. selectedConfig .. '"'
+						AutoloadToggle.Description = 'ปัจจุบัน: "' .. selectedConfig .. '"'
 						self.Library:Notify({
 							Title = "Config Loader",
-							Content = "Autoload Enabled",
-							SubContent = string.format('"%s" will load automatically', selectedConfig),
+							Content = "เปิดโหลดอัตโนมัติแล้ว",
+							SubContent = string.format('"%s" จะโหลดอัตโนมัติทุกครั้ง', selectedConfig),
 							Duration = 3
 						})
 					else
 						SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
 						self.Library:Notify({
 							Title = "Config Loader",
-							Content = "Error",
-							SubContent = err or "Failed to set autoload",
+							Content = "เกิดข้อผิดพลาด",
+							SubContent = err or "ไม่สามารถตั้งค่าโหลดอัตโนมัติได้",
 							Duration = 3
 						})
 					end
 				else
-					-- ปิด Autoload
 					local success, err = self:DisableAutoload()
 					if success then
-						AutoloadToggle.Description = "No autoload config set"
+						AutoloadToggle.Description = "ไม่มีคอนฟิกโหลดอัตโนมัติ"
 						self.Library:Notify({
 							Title = "Config Loader",
-							Content = "Autoload Disabled",
-							SubContent = "Configs will no longer auto-load",
+							Content = "ปิดโหลดอัตโนมัติแล้ว",
+							SubContent = "คอนฟิกจะไม่โหลดอัตโนมัติอีกต่อไป",
 							Duration = 3
 						})
 					end
@@ -383,17 +476,71 @@ local SaveManager = {} do
 			end
 		})
 
+		-- Auto Save Toggle (แทนที่ปุ่ม Overwrite)
+		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
+			Title = "💾 Auto Save",
+			Description = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. self.AutoSaveConfig .. '"') or "เลือกคอนฟิกเพื่อเปิดใช้งาน",
+			Default = self.AutoSaveEnabled,
+			Callback = function(value)
+				local selectedConfig = SaveManager.Options.SaveManager_ConfigList.Value
+				
+				if value then
+					if not selectedConfig then
+						SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
+						return self.Library:Notify({
+							Title = "Config Loader",
+							Content = "เกิดข้อผิดพลาด",
+							SubContent = "กรุณาเลือกคอนฟิกก่อน",
+							Duration = 3
+						})
+					end
+
+					self:EnableAutoSave(selectedConfig)
+					AutoSaveToggle.Description = 'กำลังบันทึกอัตโนมัติไปที่: "' .. selectedConfig .. '"'
+					
+					self.Library:Notify({
+						Title = "Config Loader",
+						Content = "เปิดบันทึกอัตโนมัติแล้ว",
+						SubContent = string.format('การตั้งค่าจะบันทึกไปที่ "%s" อัตโนมัติ', selectedConfig),
+						Duration = 3
+					})
+				else
+					self:DisableAutoSave()
+					AutoSaveToggle.Description = "เลือกคอนฟิกเพื่อเปิดใช้งาน"
+					
+					self.Library:Notify({
+						Title = "Config Loader",
+						Content = "ปิดบันทึกอัตโนมัติแล้ว",
+						SubContent = "จะไม่บันทึกอัตโนมัติอีกต่อไป",
+						Duration = 3
+						})
+				end
+			end
+		})
+
+		-- เมื่อเลือก config ใน dropdown
+		ConfigListDropdown.Changed = function(value)
+			if value then
+				-- อัพเดท Auto Save
+				if self.AutoSaveEnabled then
+					self.AutoSaveConfig = value
+					AutoSaveToggle.Description = 'กำลังบันทึกอัตโนมัติไปที่: "' .. value .. '"'
+					self:SaveUI()
+				end
+			end
+		end
+
 		section:AddButton({
 			Title = "💾 Save New Config",
-			Description = "Create a new configuration file",
+			Description = "สร้างไฟล์คอนฟิกใหม่",
 			Callback = function()
 				local name = SaveManager.Options.SaveManager_ConfigName.Value
 
 				if name:gsub(" ", "") == "" then
 					return self.Library:Notify({
 						Title = "Config Loader",
-						Content = "Invalid Name",
-						SubContent = "Config name cannot be empty",
+						Content = "ชื่อไม่ถูกต้อง",
+						SubContent = "ชื่อคอนฟิกต้องไม่เป็นค่าว่าง",
 						Duration = 3
 					})
 				end
@@ -402,20 +549,19 @@ local SaveManager = {} do
 				if not success then
 					return self.Library:Notify({
 						Title = "Config Loader",
-						Content = "Save Failed",
-						SubContent = err or "Unknown error",
+						Content = "บันทึกล้มเหลว",
+						SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
 						Duration = 5
 					})
 				end
 
 				self.Library:Notify({
 					Title = "Config Loader",
-					Content = "Config Saved",
-					SubContent = string.format('Created "%s"', name),
+					Content = "บันทึกคอนฟิกแล้ว",
+					SubContent = string.format('สร้าง "%s" เรียบร้อย', name),
 					Duration = 3
 				})
 
-				-- Refresh dropdown
 				ConfigListDropdown:SetValues(self:RefreshConfigList())
 				ConfigListDropdown:SetValue(name)
 			end
@@ -423,15 +569,15 @@ local SaveManager = {} do
 
 		section:AddButton({
 			Title = "📂 Load Config", 
-			Description = "Load selected configuration",
+			Description = "โหลดคอนฟิกที่เลือก",
 			Callback = function()
 				local name = SaveManager.Options.SaveManager_ConfigList.Value
 
 				if not name then
 					return self.Library:Notify({
 						Title = "Config Loader",
-						Content = "No Config Selected",
-						SubContent = "Please select a config to load",
+						Content = "ไม่ได้เลือกคอนฟิก",
+						SubContent = "กรุณาเลือกคอนฟิกที่ต้องการโหลด",
 						Duration = 3
 					})
 				end
@@ -440,50 +586,16 @@ local SaveManager = {} do
 				if not success then
 					return self.Library:Notify({
 						Title = "Config Loader",
-						Content = "Load Failed",
-						SubContent = err or "Unknown error",
+						Content = "โหลดล้มเหลว",
+						SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
 						Duration = 5
 					})
 				end
 
 				self.Library:Notify({
 					Title = "Config Loader",
-					Content = "Config Loaded",
-					SubContent = string.format('Loaded "%s"', name),
-					Duration = 3
-				})
-			end
-		})
-
-		section:AddButton({
-			Title = "✏️ Overwrite Config", 
-			Description = "Save current settings to selected config",
-			Callback = function()
-				local name = SaveManager.Options.SaveManager_ConfigList.Value
-
-				if not name then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "No Config Selected",
-						SubContent = "Please select a config to overwrite",
-						Duration = 3
-					})
-				end
-
-				local success, err = self:Save(name)
-				if not success then
-					return self.Library:Notify({
-						Title = "Config Loader",
-						Content = "Save Failed",
-						SubContent = err or "Unknown error",
-						Duration = 5
-					})
-				end
-
-				self.Library:Notify({
-					Title = "Config Loader",
-					Content = "Config Updated",
-					SubContent = string.format('Overwrote "%s"', name),
+					Content = "โหลดคอนฟิกแล้ว",
+					SubContent = string.format('โหลด "%s" เรียบร้อย', name),
 					Duration = 3
 				})
 			end
@@ -491,41 +603,41 @@ local SaveManager = {} do
 
 		section:AddButton({
 			Title = "🗑️ Delete Config",
-			Description = "Permanently delete selected config",
+			Description = "ลบคอนฟิกที่เลือกถาวร",
 			Callback = function()
 				local name = SaveManager.Options.SaveManager_ConfigList.Value
 
 				if not name then
 					return self.Library:Notify({
 						Title = "Config Loader",
-						Content = "No Config Selected",
-						SubContent = "Please select a config to delete",
+						Content = "ไม่ได้เลือกคอนฟิก",
+						SubContent = "กรุณาเลือกคอนฟิกที่ต้องการลบ",
 						Duration = 3
 					})
 				end
 
 				-- Confirmation dialog
 				self.Library:Dialog({
-					Title = "Delete Config",
-					Content = string.format('Are you sure you want to delete "%s"?', name),
+					Title = "ลบคอนฟิก",
+					Content = string.format('คุณแน่ใจหรือไม่ว่าต้องการลบ "%s"?', name),
 					Buttons = {
 						{
-							Title = "Delete",
+							Title = "ลบ",
 							Callback = function()
 								local success, err = self:Delete(name)
 								if not success then
 									return self.Library:Notify({
 										Title = "Config Loader",
-										Content = "Delete Failed",
-										SubContent = err or "Unknown error",
+										Content = "ลบล้มเหลว",
+										SubContent = err or "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
 										Duration = 5
 									})
 								end
 
 								self.Library:Notify({
 									Title = "Config Loader",
-									Content = "Config Deleted",
-									SubContent = string.format('Deleted "%s"', name),
+									Content = "ลบคอนฟิกแล้ว",
+									SubContent = string.format('ลบ "%s" เรียบร้อย', name),
 									Duration = 3
 								})
 
@@ -537,15 +649,23 @@ local SaveManager = {} do
 								local currentAutoload = self:GetAutoloadConfig()
 								if currentAutoload then
 									SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
-									AutoloadToggle.Description = 'Current: "' .. currentAutoload .. '"'
+									AutoloadToggle.Description = 'ปัจจุบัน: "' .. currentAutoload .. '"'
 								else
 									SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
-									AutoloadToggle.Description = "No autoload config set"
+									AutoloadToggle.Description = "ไม่มีคอนฟิกโหลดอัตโนมัติ"
+								end
+								
+								-- Update autosave if deleted config was autosave
+								if self.AutoSaveConfig == name then
+									self:DisableAutoSave()
+									SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(false)
+									AutoSaveToggle.Description = "เลือกคอนฟิกเพื่อเปิดใช้งาน"
 								end
 							end
 						},
 						{
-							Title = "Cancel"
+							Title = "ยกเลิก",
+							Callback = function() end
 						}
 					}
 				})
@@ -554,7 +674,7 @@ local SaveManager = {} do
 
 		section:AddButton({
 			Title = "🔄 Refresh List", 
-			Description = "Update available configs list",
+			Description = "อัพเดทรายการคอนฟิกที่มี",
 			Callback = function()
 				local configs = self:RefreshConfigList()
 				ConfigListDropdown:SetValues(configs)
@@ -562,18 +682,26 @@ local SaveManager = {} do
 				
 				self.Library:Notify({
 					Title = "Config Loader",
-					Content = "List Refreshed",
-					SubContent = string.format("Found %d config(s)", #configs),
+					Content = "รีเฟรชรายการแล้ว",
+					SubContent = string.format("พบ %d คอนฟิก", #configs),
 					Duration = 2
 				})
 			end
 		})
 
-		-- อย่าลืม Ignore UI controls ของ SaveManager เอง
+		-- Ignore UI controls ของ SaveManager
 		SaveManager:SetIgnoreIndexes({ 
 			"SaveManager_ConfigName",
-			"SaveManager_AutoloadToggle"
+			"SaveManager_ConfigList",
+			"SaveManager_AutoloadToggle",
+			"SaveManager_AutoSaveToggle"
 		})
+
+		-- โหลด UI settings และเปิดใช้ auto save ถ้าเคยเปิดไว้
+		if uiSettings and uiSettings.autosave_enabled and uiSettings.autosave_config then
+			self:EnableAutoSave(uiSettings.autosave_config)
+			SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+		end
 	end
 
 	SaveManager:BuildFolderTree()
