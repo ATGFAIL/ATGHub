@@ -50,7 +50,7 @@ local allowedPlaces = {
     },
     [122826953758426] = {
         name = "Raise-Animals",
-        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Raise-Animals.lua"
+        url = "https://api.luarmor.net/files/v3/loaders/749053cd4c06e8101e5a1c37b05cda9a.lua"
     },
     [115317601829407] = {
         name = "Arise-Shadow-Hunt",
