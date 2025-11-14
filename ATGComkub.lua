@@ -67,6 +67,10 @@ local allowedPlaces = {
     [10449761463] = {
         name = "The-Strongest-Battlegrounds",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/The-Strongest-Battlegrounds.lua"
+    },
+    [105555311806207] = {
+        name = "Build-a-Zoo",
+        url = "https://api.luarmor.net/files/v3/loaders/046e27953e3d66c75a22c19370a9e02e.lua"
     }
 }
 
