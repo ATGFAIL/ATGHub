@@ -74,7 +74,7 @@ local allowedPlaces = {
     },
     [90462358603255] = {
         name = "Anime-Eternal",
-        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/BoostFPS.lua"
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Eternal.lua"
     }
 }
 
