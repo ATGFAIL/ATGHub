@@ -32,10 +32,10 @@ local SaveManager = {} do
 		},
 		Dropdown = {
 			Save = function(idx, object)
-				return { type = "Dropdown", idx = idx, value = object.Value, mutli = object.Multi }
+				return { type = "Dropdown", idx = idx, value = object.Value, multi = object.Multi }
 			end,
 			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
+				if SaveManager.Options[idx] then
 					SaveManager.Options[idx]:SetValue(data.value)
 				end
 			end,
@@ -337,7 +337,7 @@ local SaveManager = {} do
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
 		self:SaveUI()
-		
+
 		-- บันทึก callback เดิมและตั้ง callback ใหม่
 		for idx, option in next, self.Options do
 			if not self.Ignore[idx] and self.Parser[option.Type] then
@@ -345,14 +345,27 @@ local SaveManager = {} do
 				if not self.OriginalCallbacks[idx] then
 					self.OriginalCallbacks[idx] = option.Callback
 				end
-				
-				-- สร้าง callback ใหม่
+
+				-- สร้าง callback ใหม่ที่ป้องกัน stack overflow
+				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
-					-- เรียก callback เดิม
-					if self.OriginalCallbacks[idx] then
-						self.OriginalCallbacks[idx](...)
+					-- ป้องกัน recursion ด้วยการใช้ flag
+					if option._isInCallback then
+						return
 					end
-					
+
+					option._isInCallback = true
+
+					-- เรียก callback เดิม
+					if originalCallback then
+						local success, err = pcall(originalCallback, ...)
+						if not success then
+							warn("Callback error for " .. tostring(idx) .. ": " .. tostring(err))
+						end
+					end
+
+					option._isInCallback = false
+
 					-- Auto save ด้วย debounce
 					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
 						self.AutoSaveDebounce = true
