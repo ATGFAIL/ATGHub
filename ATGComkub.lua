@@ -75,6 +75,14 @@ local allowedPlaces = {
     [90462358603255] = {
         name = "Anime-Eternal",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Eternal.lua"
+    },
+    [12886143095] = {
+        name = "Anime-Last-Stand",
+        url = "https://api.luarmor.net/files/v3/loaders/a2108d6f9fdbf65098abbe425cb91150.lua"
+    },
+    [12900046592] = {
+        name = "Anime-Last-Stand",
+        url = "https://api.luarmor.net/files/v3/loaders/a2108d6f9fdbf65098abbe425cb91150.lua"
     }
 }
 
