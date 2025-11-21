@@ -3,7 +3,7 @@ local httpService = game:GetService("HttpService")
 -- ═══════════════════════════════════════════════════════════════
 -- Load Language System
 -- ═══════════════════════════════════════════════════════════════
-local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Languages/AllInOne.lua"))()
+local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Languages/LanguageSystem.lua"))()
 
 local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
