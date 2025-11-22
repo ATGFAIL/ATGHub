@@ -18,7 +18,6 @@ local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/
 local function AddLanguageSelector(SettingsTab)
     local Section = SettingsTab:AddSection(string.format("[ 🌐 ] %s", Lang:T("settings.language")))
     
-    -- Get available languages
     local languages = Lang:GetAvailableLanguages()
     local languageValues = {}
     local currentIndex = 1
@@ -29,46 +28,78 @@ local function AddLanguageSelector(SettingsTab)
             currentIndex = i
         end
     end
+
+    local selectedLangCode = languages[currentIndex] and languages[currentIndex].code or Lang:GetCurrentLanguage()
+    local selectedLangName = languages[currentIndex] and languages[currentIndex].name or selectedLangCode
+
+    local function applyButtonTitle()
+        local base = Lang:T("Apply Lang")
+        if selectedLangName then
+            return string.format("%s (%s)", base, selectedLangName)
+        end
+        return base
+    end
     
-    -- Create dropdown
     local LanguageDropdown = Section:AddDropdown("LanguageSelect", {
         Title = Lang:T("settings.select_language"),
-        Description = "Choose your preferred language",
+        Description = Lang:T("Choose your preferred language"),
         Values = languageValues,
         Multi = false,
         Default = currentIndex,
     })
     
-    -- Handle language change
+    local ApplyButton
+    
     LanguageDropdown:OnChanged(function(value)
-        -- Find selected language code
         for _, langData in ipairs(languages) do
             if langData.display == value then
-                Lang:SetLanguage(langData.code)
-                
-                -- Notify user
-                if Fluent and Fluent.Notify then
-                    Fluent:Notify({
-                        Title = Lang:T("settings.language"),
-                        Content = string.format("Language changed to %s", langData.name),
-                        Duration = 3
-                    })
+                selectedLangCode = langData.code
+                selectedLangName = langData.name
+                if ApplyButton then
+                    if ApplyButton.SetTitle then
+                        ApplyButton:SetTitle(applyButtonTitle())
+                    else
+                        ApplyButton.Title = applyButtonTitle()
+                    end
                 end
-                
-                -- Reload UI to apply changes
-                task.wait(0.5)
-                if Window and Window.Minimize then
-                    Window:Minimize()
-                    task.wait(0.1)
-                    Window:Minimize()
-                end
-                
                 break
             end
         end
     end)
+
+    ApplyButton = Section:AddButton({
+        Title = applyButtonTitle(),
+        Description = Lang:T("Translate and apply immediately"),
+        Callback = function()
+            if not selectedLangCode then
+                return
+            end
+
+            local previousLang = Lang:GetCurrentLanguage()
+            local changed = Lang:SetLanguage(selectedLangCode)
+
+            if not changed and previousLang == selectedLangCode then
+                if Fluent and Fluent.Notify then
+                    Fluent:Notify({
+                        Title = Lang:T("settings.language"),
+                        Content = Lang:T("Language already applied"),
+                        Duration = 3,
+                    })
+                end
+                return
+            end
+
+            if Fluent and Fluent.Notify then
+                Fluent:Notify({
+                    Title = Lang:T("settings.language"),
+                    Content = string.format(Lang:T("Language changed to %s"), selectedLangName or selectedLangCode),
+                    Duration = 3
+                })
+            end
+        end
+    })
     
-    return LanguageDropdown
+    return LanguageDropdown, ApplyButton
 end
 
 -- ============================================================
