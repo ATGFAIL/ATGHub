@@ -2,7 +2,7 @@
 -- ATG HUB - Multi-Language UI System
 -- Load Language System First
 -- ============================================================
-local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/Premium/LanguageSystem.lua"))()
+local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Premium/LanguageSystem.lua"))()
 
 do
     local a = game:GetService("TweenService")
