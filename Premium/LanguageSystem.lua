@@ -620,32 +620,335 @@ if getgenv then
 end
 _G.ATG_Lang = Lang
 
+function LanguageSystem:GetCurrentLanguage()
+    return self.currentLanguage
+end
+
+function LanguageSystem:OnLanguageChanged(callback)
+    self.onLanguageChanged = callback
+end
+
+local Lang = setmetatable({}, LanguageSystem)
+Lang:Initialize()
+
+if getgenv then
+    getgenv().ATG_Lang = Lang
+end
+_G.ATG_Lang = Lang
+
 -- ============================================================
--- USAGE EXAMPLE
+-- HELPER FUNCTIONS FOR UI INTEGRATION
 -- ============================================================
--- วิธีใช้งานระบบภาษา:
---
--- 1. เปลี่ยนภาษา:
---    Lang:SetLanguage("th")  -- เปลี่ยนเป็นภาษาไทย
---    Lang:SetLanguage("en")  -- เปลี่ยนเป็นภาษาอังกฤษ
---    Lang:SetLanguage("zh")  -- เปลี่ยนเป็นภาษาจีน
---
--- 2. ดึงข้อความ:
---    Lang:T("tabs.main")           -- "Main" หรือ "หลัก" หรือ "主页"
---    Lang:T("main.player_info")    -- "Player Info" หรือ "ข้อมูลผู้เล่น"
---    Lang:T("common.loading")      -- "Loading..." หรือ "กำลังโหลด..."
---
--- 3. ใช้ในการสร้าง UI:
---    local mainTab = Window:AddTab({Title = Lang:T("tabs.main"), Icon = "repeat"})
---    local button = mainTab:AddButton({
---        Title = Lang:T("main.pickup_all"),
---        Description = Lang:T("farm.warning_area")
---    })
---
--- 4. ดูภาษาที่มี:
---    local languages = Lang:GetAvailableLanguages()
---    for _, lang in ipairs(languages) do
---        print(lang.display)  -- 🇺🇸 English, 🇹🇭 ไทย, 🇨🇳 中文
---    end
---
+
+-- Store UI elements for dynamic updates
+local UIElements = {
+    tabs = {},
+    sections = {},
+    toggles = {},
+    buttons = {},
+    dropdowns = {},
+    sliders = {},
+    inputs = {},
+    paragraphs = {},
+}
+
+-- Register UI element for language updates
+local function RegisterUIElement(element, category, textKey, property)
+    if not element or not category or not textKey then return end
+    
+    property = property or "Title"
+    
+    if not UIElements[category] then
+        UIElements[category] = {}
+    end
+    
+    table.insert(UIElements[category], {
+        element = element,
+        textKey = textKey,
+        property = property,
+        id = #UIElements[category] + 1
+    })
+    
+    return element
+end
+
+-- Update all registered UI elements
+local function UpdateAllUIElements()
+    for category, elements in pairs(UIElements) do
+        for _, data in ipairs(elements) do
+            if data.element and data.textKey then
+                local newText = Lang:T(data.textKey)
+                pcall(function()
+                    if data.element.SetTitle then
+                        data.element:SetTitle(newText)
+                    elseif data.element.SetDesc then
+                        data.element:SetDesc(newText)
+                    elseif type(data.element[data.property]) ~= "function" then
+                        data.element[data.property] = newText
+                    end
+                end)
+            end
+        end
+    end
+end
+
+-- Create translated toggle
+local function CreateLangToggle(tab, id, titleKey, descKey, default, callback)
+    local toggle = tab:AddToggle(id, {
+        Title = Lang:T(titleKey),
+        Description = descKey and Lang:T(descKey) or "",
+        Default = default or false
+    })
+    
+    if callback then
+        toggle:OnChanged(callback)
+    end
+    
+    RegisterUIElement(toggle, "toggles", titleKey, "Title")
+    
+    return toggle
+end
+
+-- Create translated button
+local function CreateLangButton(tab, titleKey, descKey, callback)
+    local button = tab:AddButton({
+        Title = Lang:T(titleKey),
+        Description = descKey and Lang:T(descKey) or "",
+        Callback = callback or function() end
+    })
+    
+    RegisterUIElement(button, "buttons", titleKey, "Title")
+    
+    return button
+end
+
+-- Create translated section
+local function CreateLangSection(tab, icon, titleKey)
+    local title = string.format("[ %s ] %s", icon or "📦", Lang:T(titleKey))
+    local section = tab:AddSection(title)
+    
+    RegisterUIElement(section, "sections", titleKey, "Title")
+    
+    return section
+end
+
+-- Create translated dropdown
+local function CreateLangDropdown(tab, id, titleKey, descKey, values, default, multi, callback)
+    local dropdown = tab:AddDropdown(id, {
+        Title = Lang:T(titleKey),
+        Description = descKey and Lang:T(descKey) or "",
+        Values = values or {},
+        Multi = multi or false,
+        Default = default or (multi and {} or 1),
+    })
+    
+    if callback then
+        dropdown:OnChanged(callback)
+    end
+    
+    RegisterUIElement(dropdown, "dropdowns", titleKey, "Title")
+    
+    return dropdown
+end
+
+-- Create translated slider
+local function CreateLangSlider(tab, id, titleKey, descKey, default, min, max, rounding, callback)
+    local slider = tab:AddSlider(id, {
+        Title = Lang:T(titleKey),
+        Description = descKey and Lang:T(descKey) or "",
+        Default = default or 50,
+        Min = min or 0,
+        Max = max or 100,
+        Rounding = rounding or 0,
+        Callback = callback or function() end
+    })
+    
+    RegisterUIElement(slider, "sliders", titleKey, "Title")
+    
+    return slider
+end
+
+-- Create translated input
+local function CreateLangInput(tab, id, titleKey, placeholder, default, numeric, callback)
+    local input = tab:AddInput(id, {
+        Title = Lang:T(titleKey),
+        Default = default or "",
+        Placeholder = placeholder or "",
+        Numeric = numeric or false,
+        Finished = false,
+        Callback = callback or function() end
+    })
+    
+    RegisterUIElement(input, "inputs", titleKey, "Title")
+    
+    return input
+end
+
+-- Create translated paragraph
+local function CreateLangParagraph(tab, titleKey, contentKey)
+    local paragraph = tab:AddParagraph({
+        Title = Lang:T(titleKey),
+        Content = contentKey and Lang:T(contentKey) or ""
+    })
+    
+    RegisterUIElement(paragraph, "paragraphs", titleKey, "Title")
+    
+    return paragraph
+end
+
+-- Notification helper
+local function NotifyLang(titleKey, contentKey, duration)
+    if Fluent and Fluent.Notify then
+        Fluent:Notify({
+            Title = Lang:T(titleKey),
+            Content = contentKey and Lang:T(contentKey) or "",
+            Duration = duration or 3
+        })
+    end
+end
+
+-- Dialog helper
+local function DialogLang(titleKey, contentKey, buttons)
+    if Window and Window.Dialog then
+        Window:Dialog({
+            Title = Lang:T(titleKey),
+            Content = contentKey and Lang:T(contentKey) or "",
+            Buttons = buttons or {{Title = Lang:T("common.ok"), Callback = function() end}}
+        })
+    end
+end
+
+-- Add Language Selector to Settings Tab
+local function AddLanguageSelector(SettingsTab)
+    local Section = CreateLangSection(SettingsTab, "🌐", "settings.language")
+    
+    -- Get available languages
+    local languages = Lang:GetAvailableLanguages()
+    local languageValues = {}
+    local currentIndex = 1
+    
+    for i, langData in ipairs(languages) do
+        table.insert(languageValues, langData.display)
+        if langData.code == Lang:GetCurrentLanguage() then
+            currentIndex = i
+        end
+    end
+    
+    -- Create dropdown
+    local LanguageDropdown = SettingsTab:AddDropdown("LanguageSelect", {
+        Title = Lang:T("settings.select_language"),
+        Description = "🌍 Change interface language / เปลี่ยนภาษา / 更改语言",
+        Values = languageValues,
+        Multi = false,
+        Default = currentIndex,
+    })
+    
+    -- Handle language change
+    LanguageDropdown:OnChanged(function(value)
+        for _, langData in ipairs(languages) do
+            if langData.display == value then
+                local oldLang = Lang:GetCurrentLanguage()
+                if oldLang ~= langData.code then
+                    Lang:SetLanguage(langData.code)
+                    
+                    -- Update all UI elements
+                    task.wait(0.1)
+                    UpdateAllUIElements()
+                    
+                    -- Notify user
+                    NotifyLang("common.success", "settings.language")
+                    
+                    -- Optional: Minimize and restore to refresh
+                    task.spawn(function()
+                        task.wait(0.3)
+                        if Window and Window.Minimize then
+                            Window:Minimize()
+                            task.wait(0.1)
+                            Window:Minimize()
+                        end
+                    end)
+                end
+                break
+            end
+        end
+    end)
+    
+    return LanguageDropdown
+end
+
+-- Register language change callback
+Lang:OnLanguageChanged(function(newLang, oldLang)
+    print(string.format("[ATG Language] Changed from %s to %s", oldLang or "none", newLang))
+    task.spawn(UpdateAllUIElements)
+end)
+
+-- ============================================================
+-- EXPORT HELPER FUNCTIONS
+-- ============================================================
+if getgenv then
+    getgenv().ATG_LangHelpers = {
+        CreateLangToggle = CreateLangToggle,
+        CreateLangButton = CreateLangButton,
+        CreateLangSection = CreateLangSection,
+        CreateLangDropdown = CreateLangDropdown,
+        CreateLangSlider = CreateLangSlider,
+        CreateLangInput = CreateLangInput,
+        CreateLangParagraph = CreateLangParagraph,
+        NotifyLang = NotifyLang,
+        DialogLang = DialogLang,
+        AddLanguageSelector = AddLanguageSelector,
+        UpdateAllUIElements = UpdateAllUIElements,
+        RegisterUIElement = RegisterUIElement,
+    }
+end
+
+_G.ATG_LangHelpers = getgenv().ATG_LangHelpers
+
+-- ============================================================
+-- USAGE EXAMPLES
+-- ============================================================
+--[[
+    -- Basic Usage:
+    local text = Lang:T("common.loading")           -- Get translated text
+    Lang:SetLanguage("th")                          -- Change to Thai
+    local current = Lang:GetCurrentLanguage()       -- Get current language code
+    
+    -- Create UI with language support:
+    local Section = CreateLangSection(Tabs.Main, "🎯", "main.player_info")
+    
+    local Toggle = CreateLangToggle(
+        Tabs.Main,
+        "AutoFarmToggle",
+        "farm.auto_farm",
+        "descriptions.auto_farm_desc",
+        false,
+        function(value)
+            if value then
+                NotifyLang("common.success", "notifications.feature_enabled")
+            end
+        end
+    )
+    
+    local Button = CreateLangButton(
+        Tabs.Farm,
+        "main.pickup_all",
+        "farm.warning_area",
+        function()
+            -- Button logic here
+        end
+    )
+    
+    -- Add language selector to Settings:
+    AddLanguageSelector(Tabs.Settings)
+    
+    -- Show notification:
+    NotifyLang("common.success", "notifications.loaded", 5)
+    
+    -- Show dialog:
+    DialogLang("common.confirm", "notifications.want_to_continue", {
+        {Title = Lang:T("common.confirm"), Callback = function() print("Confirmed") end},
+        {Title = Lang:T("common.cancel"), Callback = function() print("Cancelled") end}
+    })
+]]
+
 -- ============================================================
