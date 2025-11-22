@@ -7,7 +7,7 @@
 -- ============================================================
 -- STEP 1: Load Language System at the top of your script
 -- ============================================================
-local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/Premium/LanguageSystem.lua"))()
+local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Premium/LanguageSystem.lua"))()
 
 -- Or if using local file:
 -- local Lang = require(script.Parent.LanguageSystem)
@@ -91,6 +91,12 @@ local function CreateAutoFarmToggle(MainTab)
     })
     return Toggle
 end
+
+-- ============================================================
+-- GITHUB RAW URL
+-- ============================================================
+-- Use this URL to load the language system:
+-- https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Premium/LanguageSystem.lua
 
 -- ============================================================
 -- STEP 4: Update Notifications
