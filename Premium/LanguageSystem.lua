@@ -141,7 +141,8 @@ LanguageSystem.Languages = {
             player_name = "📝 Player Name",
             refresh_list = "Refresh List",
             refresh_list_desc = "Refresh player list",
-            teleport_method = "Teleport Method",
+            teleport = "Teleport",
+            method = "Method",
             instant = "Instant",
             tween = "Tween",
             moveto = "MoveTo",
@@ -149,10 +150,6 @@ LanguageSystem.Languages = {
             teleport_to_selected = "Teleport to selected player",
             auto_follow = "Auto Follow",
             follow_player = "Follow selected player",
-            method = "Method",
-            instant = "Instant",
-            tween = "Tween",
-            moveto = "MoveTo",
             player = "Player",
         },
 
@@ -271,6 +268,8 @@ LanguageSystem.Languages = {
             reset_defaults = "Reset to Defaults",
             reset_defaults_desc = "Reset Walk/Jump to default values (16, 50)",
             fly_key = "Fly Key (Toggle)",
+            speed_jump = "Speed & Jump",
+            fly_noclip = "Fly & Noclip",
         },
         
         -- Notifications
@@ -490,6 +489,11 @@ LanguageSystem.Languages = {
             speed_boost = "🏃 เพิ่มความเร็ว",
             jump_power = "🦘 พลังกระโดด",
             player_name = "📝 ชื่อผู้เล่น",
+            teleport = "วาร์ป",
+            method = "วิธีการ",
+            instant = "ทันที",
+            tween = "ทรานซิชัน",
+            moveto = "ย้ายไป",
         },
         
         -- Egg Tab
@@ -526,6 +530,8 @@ LanguageSystem.Languages = {
             reset_defaults = "คืนค่าเริ่มต้น",
             reset_defaults_desc = "คืนค่า Walk/Jump ไปค่าเริ่มต้น (16, 50)",
             fly_key = "ปุ่มบิน (สลับ)",
+            speed_jump = "ความเร็ว & กระโดด",
+            fly_noclip = "บิน & ไม่ชน",
         },
         
         -- Notifications
@@ -731,6 +737,11 @@ LanguageSystem.Languages = {
             speed_boost = "🏃 速度提升",
             jump_power = "🦘 跳跃力量",
             player_name = "📝 玩家名称",
+            teleport = "传送",
+            method = "方法",
+            instant = "即时",
+            tween = "过渡",
+            moveto = "移动到",
         },
         
         -- Egg Tab
@@ -767,6 +778,8 @@ LanguageSystem.Languages = {
             reset_defaults = "恢复默认",
             reset_defaults_desc = "将 Walk/Jump 重置为默认值 (16, 50)",
             fly_key = "飞行键 (切换)",
+            speed_jump = "速度 & 跳跃",
+            fly_noclip = "飞行 & 穿墙",
         },
         
         -- Notifications
@@ -972,6 +985,11 @@ LanguageSystem.Languages = {
             speed_boost = "🏃 速度ブースト",
             jump_power = "🦘 ジャンプ力",
             player_name = "📝 プレイヤー名",
+            teleport = "テレポート",
+            method = "方法",
+            instant = "即時",
+            tween = "トゥイーン",
+            moveto = "移動先",
         },
 
         -- Egg Tab
@@ -1008,6 +1026,8 @@ LanguageSystem.Languages = {
             reset_defaults = "デフォルトに戻す",
             reset_defaults_desc = "Walk/Jump をデフォルト値にリセット (16, 50)",
             fly_key = "飛行キー (切り替え)",
+            speed_jump = "速度 & ジャンプ",
+            fly_noclip = "飛行 & ノークリップ",
         },
 
         -- Notifications
@@ -1213,6 +1233,11 @@ LanguageSystem.Languages = {
             speed_boost = "🏃 속도 부스트",
             jump_power = "🦘 점프력",
             player_name = "📝 플레이어 이름",
+            teleport = "텔레포트",
+            method = "방법",
+            instant = "즉시",
+            tween = "트윈",
+            moveto = "이동",
         },
 
         -- Egg Tab
@@ -1249,6 +1274,8 @@ LanguageSystem.Languages = {
             reset_defaults = "기본값으로 재설정",
             reset_defaults_desc = "Walk/Jump를 기본값으로 재설정 (16, 50)",
             fly_key = "비행 키 (전환)",
+            speed_jump = "속도 & 점프",
+            fly_noclip = "비행 & 노클립",
         },
 
         -- Notifications
