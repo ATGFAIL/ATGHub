@@ -20,6 +20,7 @@ LanguageSystem.Languages = {
         -- Common UI Elements
         common = {
             loading = "Loading...",
+            loading_player_info = "Loading player info...",
             success = "Success",
             error = "Error",
             warning = "Warning",
@@ -68,6 +69,7 @@ LanguageSystem.Languages = {
             auto_sell = "Auto Sell",
             auto_sell_desc = "Sell selected animals automatically",
             select_animals_sell = "Select Animals to Sell",
+            select_animals_sell_desc = "Select animals to sell (multiple selection)",
             animal_management = "Animal Management",
             auto_place_animals = "Auto Place Animals",
             auto_pickup_animals = "Auto PickUp Animals",
@@ -95,11 +97,17 @@ LanguageSystem.Languages = {
             select_animals_place = "Select Animals to Place",
             select_animals_place_desc = "Select animals to place automatically",
             auto_place_animals_desc = "Place animals automatically as selected",
+            select_animals_place_title = "Select Animals to Place",
+            select_animals_place_description = "Select animals to place automatically",
             select_animals_pickup = "Select Animals to PickUp",
             select_animals_pickup_desc = "Select animals to pick up automatically",
             auto_pickup_animals_desc = "Pick up animals automatically as selected",
+            select_animals_pickup_title = "Select Animals to PickUp",
+            select_animals_pickup_description = "Select animals to pick up automatically",
             pickup_animals = "PickUp Animals",
             pickup_animals_desc = "Pick up all animals into backpack",
+            pickup_all_animals = "PickUp All Animals",
+            pickup_all_animals_desc = "Pick up all animals into backpack",
         },
         
         -- Settings Tab
@@ -141,6 +149,10 @@ LanguageSystem.Languages = {
             teleport_to_selected = "Teleport to selected player",
             auto_follow = "Auto Follow",
             follow_player = "Follow selected player",
+            method = "Method",
+            instant = "Instant",
+            tween = "Tween",
+            moveto = "MoveTo",
             player = "Player",
         },
 
@@ -158,8 +170,14 @@ LanguageSystem.Languages = {
             paste_job_id = "Paste Job ID here",
             teleport_to_job = "Teleport to Job",
             teleport_to_entered_job = "Teleport to entered Job ID",
+            input_job_id_title = "Input Job ID",
+            paste_job_id_here = "Paste Job ID here",
             copy_job_id = "Copy Current Job ID",
             copy_current_job_id = "Copy the Job ID you are currently in",
+            teleport_to_job_title = "Teleport to Job",
+            teleport_to_job_desc = "Teleport to the Job ID entered above",
+            copy_current_job_id_title = "Copy Current Job ID",
+            copy_current_job_id_desc = "Copy the Job ID you are currently in",
             desert_event = "Desert Event",
             select_desert_items = "Select Desert Event Items",
             select_items_auto_buy = "Select items to buy automatically",
@@ -234,6 +252,7 @@ LanguageSystem.Languages = {
             speed_boost = "🏃 Speed Boost",
             jump_power = "🦘 Jump Power",
             player_name = "📝 Player Name",
+            player = "Player",
         },
         
         -- Humanoid Tab
@@ -346,6 +365,7 @@ LanguageSystem.Languages = {
         -- Common UI Elements
         common = {
             loading = "กำลังโหลด...",
+            loading_player_info = "กำลังโหลดข้อมูลผู้เล่น...",
             success = "สำเร็จ",
             error = "ข้อผิดพลาด",
             warning = "คำเตือน",
@@ -394,6 +414,7 @@ LanguageSystem.Languages = {
             auto_sell = "ขายอัตโนมัติ",
             auto_sell_desc = "ขายสัตว์ที่เลือกอัตโนมัติ",
             select_animals_sell = "เลือกสัตว์ที่จะขาย",
+            select_animals_sell_desc = "เลือกสัตว์ที่จะขาย (เลือกได้หลายตัว)",
             animal_management = "จัดการสัตว์",
             auto_place_animals = "วางสัตว์อัตโนมัติ",
             auto_pickup_animals = "เก็บสัตว์อัตโนมัติ",
@@ -421,11 +442,15 @@ LanguageSystem.Languages = {
             select_animals_place = "เลือกสัตว์ที่จะวาง",
             select_animals_place_desc = "เลือกสัตว์ที่จะวางอัตโนมัติ",
             auto_place_animals_desc = "วางสัตว์อัตโนมัติตามที่เลือก",
+            select_animals_place_title = "เลือกสัตว์ที่จะวาง",
+            select_animals_place_description = "เลือกสัตว์ที่จะวางอัตโนมัติ",
             select_animals_pickup = "เลือกสัตว์ที่จะเก็บ",
             select_animals_pickup_desc = "เลือกสัตว์ที่จะเก็บอัตโนมัติ",
             auto_pickup_animals_desc = "เก็บสัตว์อัตโนมัติตามที่เลือก",
             pickup_animals = "เก็บสัตว์",
             pickup_animals_desc = "เก็บสัตว์ทุกตัวใส่กระเป๋า",
+            pickup_all_animals = "เก็บสัตว์ทั้งหมด",
+            pickup_all_animals_desc = "เก็บสัตว์ทุกตัวใส่กระเป๋า",
         },
         
         -- Settings Tab
@@ -615,6 +640,7 @@ LanguageSystem.Languages = {
         -- Common UI Elements
         common = {
             loading = "加载中...",
+            loading_player_info = "加载玩家信息...",
             success = "成功",
             error = "错误",
             warning = "警告",
@@ -855,6 +881,7 @@ LanguageSystem.Languages = {
         -- Common UI Elements
         common = {
             loading = "読み込み中...",
+            loading_player_info = "プレイヤー情報を読み込み中...",
             success = "成功",
             error = "エラー",
             warning = "警告",
@@ -1095,6 +1122,7 @@ LanguageSystem.Languages = {
         -- Common UI Elements
         common = {
             loading = "로딩 중...",
+            loading_player_info = "플레이어 정보 로딩 중...",
             success = "성공",
             error = "오류",
             warning = "경고",
