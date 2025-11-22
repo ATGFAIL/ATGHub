@@ -52,6 +52,7 @@ LanguageSystem.Languages = {
 LanguageSystem.currentLanguage = "en"
 LanguageSystem.supportedLanguages = {"en", "th", "zh", "ja", "ko"}
 LanguageSystem.fallbackLanguage = "en"
+LanguageSystem.languageChangeCallbacks = {} -- Callbacks for language changes
 
 -- ============================================================
 -- AUTO-TRANSLATION FUNCTIONS
@@ -264,7 +265,29 @@ function LanguageSystem:SetLanguage(langCode)
         getgenv().ATG_Language = langCode
     end
 
+    -- Call language change callbacks
+    self:TriggerLanguageChangeCallbacks(oldLanguage, langCode)
+
     return true
+end
+
+-- Register callback for language changes
+function LanguageSystem:OnLanguageChanged(callback)
+    if type(callback) ~= "function" then
+        return false
+    end
+
+    table.insert(self.languageChangeCallbacks, callback)
+    return true
+end
+
+-- Trigger all language change callbacks
+function LanguageSystem:TriggerLanguageChangeCallbacks(oldLang, newLang)
+    for _, callback in ipairs(self.languageChangeCallbacks) do
+        pcall(function()
+            callback(newLang, oldLang)
+        end)
+    end
 end
 
 -- Get current language
