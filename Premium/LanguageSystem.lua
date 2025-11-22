@@ -73,6 +73,58 @@ else
     }
 end
 
+local rawHttpRequest = nil
+if type(request) == "function" then
+    rawHttpRequest = request
+elseif type(http_request) == "function" then
+    rawHttpRequest = http_request
+elseif syn and type(syn.request) == "function" then
+    rawHttpRequest = syn.request
+elseif http and type(http.request) == "function" then
+    rawHttpRequest = http.request
+elseif fluxus and type(fluxus.request) == "function" then
+    rawHttpRequest = fluxus.request
+end
+
+local function postJson(url, jsonBody)
+    if rawHttpRequest then
+        local success, response = pcall(rawHttpRequest, {
+            Url = url,
+            Method = "POST",
+            Headers = {['Content-Type'] = 'application/json'},
+            Body = jsonBody,
+        })
+        if not success or not response then
+            return nil
+        end
+        local ok = response.Success
+        if ok == nil and response.StatusCode then
+            ok = response.StatusCode >= 200 and response.StatusCode < 300
+        end
+        if ok == false then
+            return nil
+        end
+        return response.Body
+    end
+
+    if HttpService and HttpService.RequestAsync then
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = url,
+                Method = "POST",
+                Headers = {['Content-Type'] = 'application/json'},
+                Body = jsonBody,
+            })
+        end)
+        if not success or not response or not response.Success then
+            return nil
+        end
+        return response.Body
+    end
+
+    return nil
+end
+
 local function validateUnicode(text)
     if not text or type(text) ~= "string" then
         return false
@@ -131,31 +183,20 @@ local function resolveSourceText(raw, defaultText)
 end
 
 local function translateText(url, text, sourceLang, targetLang)
-    if not HttpService or not HttpService.RequestAsync then
-        return nil
-    end
-
     local payload = {
         q = text,
         source = sourceLang,
         target = targetLang,
+        format = "text",
     }
 
     local body = HttpService:JSONEncode(payload)
-    local success, response = pcall(function()
-        return HttpService:RequestAsync({
-            Url = url,
-            Method = "POST",
-            Headers = {['Content-Type'] = 'application/json'},
-            Body = body,
-        })
-    end)
-
-    if not success or not response or not response.Success then
+    local responseBody = postJson(url, body)
+    if not responseBody then
         return nil
     end
 
-    local ok, decoded = pcall(HttpService.JSONDecode, HttpService, response.Body)
+    local ok, decoded = pcall(HttpService.JSONDecode, HttpService, responseBody)
     if not ok or not decoded or not decoded.translatedText then
         return nil
     end
