@@ -50,6 +50,9 @@ LanguageSystem.Languages = {
             auto_claim = "Auto Claim",
             auto_upgrade = "Auto Upgrade",
             auto_equip = "Auto Equip",
+            basic_features = "Basic Features",
+            test_notification = "🔔 Test Notification",
+            confirmation_dialog = "❓ Confirmation Dialog",
         },
         
         -- Farm Tab
@@ -62,6 +65,11 @@ LanguageSystem.Languages = {
             radius = "Radius",
             select_enemy = "Select Enemy",
             select_target = "Select Target",
+            weapons_abilities = "Weapons and Abilities",
+            controls = "Controls",
+            select_weapon = "🗡️ Select Weapon",
+            special_abilities = "✨ Special Abilities",
+            attack_button = "⚡ Attack Button",
         },
         
         -- Settings Tab
@@ -87,6 +95,21 @@ LanguageSystem.Languages = {
             teleport_to_job = "Teleport to Job",
             copy_job_id = "Copy Current Job ID",
         },
+
+        -- Teleport Tab
+        teleport = {
+            title = "Teleport",
+        },
+
+        -- Players Tab
+        players = {
+            title = "Players",
+            movement = "Movement",
+            player_info = "Player Info",
+            speed_boost = "🏃 Speed Boost",
+            jump_power = "🦘 Jump Power",
+            player_name = "📝 Player Name",
+        },
         
         -- Humanoid Tab
         humanoid = {
@@ -111,6 +134,27 @@ LanguageSystem.Languages = {
             teleport_failed = "Teleport failed",
             invalid_input = "Invalid input",
             please_wait = "Please wait...",
+            welcome = "Welcome!",
+            press_left_ctrl = "Press Left Ctrl to open/close UI",
+            success = "Success!",
+            button_pressed = "You pressed the button",
+            confirm_action = "Confirm Action",
+            want_to_continue = "Do you want to continue?",
+            confirm = "✅ Confirm",
+            cancel = "❌ Cancel",
+            confirmed = "Confirmed",
+            action_completed = "Action completed",
+            enabled = "Enabled",
+            speed_set_50 = "Speed set to 50",
+            disabled = "Disabled",
+            speed_reset = "Speed reset to normal",
+            weapon_switched = "Weapon switched",
+            using_weapon = "You are using: ",
+            attack = "Attack!",
+            skill_used = "Skill has been used",
+            loading = "Loading...",
+            saved = "Saved",
+            your_name_is = "Your name is: ",
         },
         
         -- Descriptions
@@ -122,6 +166,19 @@ LanguageSystem.Languages = {
             noclip_desc = "Walk through walls",
             anti_afk_desc = "Prevent AFK kick",
             server_hop_desc = "Join a random server",
+            test_notification_desc = "Click to show notification",
+            confirmation_dialog_desc = "Show dialog box with selection buttons",
+            speed_boost_desc = "Walk faster",
+            jump_power_desc = "Adjust jump height",
+            select_weapon_desc = "Choose weapon to use",
+            special_abilities_desc = "Select multiple options",
+            player_name_desc = "Type your name...",
+            attack_button_desc = "Press to attack",
+        },
+
+        -- Instructions and paragraphs
+        instructions = {
+            main_instructions = "This is an example of Fluent UI usage\nYou can customize it as desired\nThank you for using ATG HUB!",
         },
     },
     
@@ -165,6 +222,9 @@ LanguageSystem.Languages = {
             auto_claim = "รับของอัตโนมัติ",
             auto_upgrade = "อัพเกรดอัตโนมัติ",
             auto_equip = "สวมใส่อัตโนมัติ",
+            basic_features = "ฟีเจอร์พื้นฐาน",
+            test_notification = "🔔 ทดสอบการแจ้งเตือน",
+            confirmation_dialog = "❓ กล่องยืนยัน",
         },
         
         -- Farm Tab
@@ -177,6 +237,11 @@ LanguageSystem.Languages = {
             radius = "รัศมี",
             select_enemy = "เลือกศัตรู",
             select_target = "เลือกเป้าหมาย",
+            weapons_abilities = "อาวุธและความสามารถ",
+            controls = "การควบคุม",
+            select_weapon = "🗡️ เลือกอาวุธ",
+            special_abilities = "✨ ความสามารถพิเศษ",
+            attack_button = "⚡ ปุ่มโจมตี",
         },
         
         -- Settings Tab
@@ -202,6 +267,21 @@ LanguageSystem.Languages = {
             teleport_to_job = "วาร์ปไปเซิร์ฟ",
             copy_job_id = "คัดลอกรหัสเซิร์ฟ",
         },
+
+        -- Teleport Tab
+        teleport = {
+            title = "วาร์ป",
+        },
+
+        -- Players Tab
+        players = {
+            title = "ผู้เล่น",
+            movement = "การเคลื่อนที่",
+            player_info = "ข้อมูลผู้เล่น",
+            speed_boost = "🏃 เพิ่มความเร็ว",
+            jump_power = "🦘 พลังกระโดด",
+            player_name = "📝 ชื่อผู้เล่น",
+        },
         
         -- Humanoid Tab
         humanoid = {
@@ -226,6 +306,27 @@ LanguageSystem.Languages = {
             teleport_failed = "วาร์ปล้มเหลว",
             invalid_input = "ข้อมูลไม่ถูกต้อง",
             please_wait = "กรุณารอสักครู่...",
+            welcome = "ยินดีต้อนรับ!",
+            press_left_ctrl = "กด Left Ctrl เพื่อเปิด/ปิด UI",
+            success = "สำเร็จ!",
+            button_pressed = "คุณกดปุ่มแล้ว",
+            confirm_action = "ยืนยันการทำงาน",
+            want_to_continue = "คุณต้องการดำเนินการต่อหรือไม่?",
+            confirm = "✅ ยืนยัน",
+            cancel = "❌ ยกเลิก",
+            confirmed = "ยืนยันแล้ว",
+            action_completed = "ดำเนินการสำเร็จ",
+            enabled = "เปิดใช้งาน",
+            speed_set_50 = "เพิ่มความเร็วเป็น 50",
+            disabled = "ปิดใช้งาน",
+            speed_reset = "รีเซ็ตความเร็วเป็นปกติ",
+            weapon_switched = "สลับอาวุธ",
+            using_weapon = "คุณกำลังใช้: ",
+            attack = "โจมตี!",
+            skill_used = "สกิลถูกใช้แล้ว",
+            loading = "กำลังโหลด...",
+            saved = "บันทึกแล้ว",
+            your_name_is = "ชื่อของคุณคือ: ",
         },
         
         -- Descriptions
@@ -237,6 +338,19 @@ LanguageSystem.Languages = {
             noclip_desc = "เดินทะลุกำแพง",
             anti_afk_desc = "ป้องกันถูกเตะออก",
             server_hop_desc = "เข้าเซิร์ฟเวอร์สุ่ม",
+            test_notification_desc = "กดเพื่อแสดงการแจ้งเตือน",
+            confirmation_dialog_desc = "แสดงกล่องโต้ตอบพร้อมปุ่มเลือก",
+            speed_boost_desc = "เดินเร็วขึ้น",
+            jump_power_desc = "ปรับความสูงในการกระโดด",
+            select_weapon_desc = "เลือกอาวุธที่ต้องการใช้",
+            special_abilities_desc = "เลือกได้หลายอัน",
+            player_name_desc = "พิมพ์ชื่อของคุณ...",
+            attack_button_desc = "กดเพื่อโจมตี",
+        },
+
+        -- Instructions and paragraphs
+        instructions = {
+            main_instructions = "นี่คือตัวอย่างการใช้งาน Fluent UI\nคุณสามารถปรับแต่งได้ตามต้องการ\nขอบคุณที่ใช้ ATG HUB!",
         },
     },
     
@@ -280,6 +394,9 @@ LanguageSystem.Languages = {
             auto_claim = "自动领取",
             auto_upgrade = "自动升级",
             auto_equip = "自动装备",
+            basic_features = "基本功能",
+            test_notification = "🔔 测试通知",
+            confirmation_dialog = "❓ 确认对话框",
         },
         
         -- Farm Tab
@@ -292,6 +409,11 @@ LanguageSystem.Languages = {
             radius = "范围",
             select_enemy = "选择敌人",
             select_target = "选择目标",
+            weapons_abilities = "武器和能力",
+            controls = "控制",
+            select_weapon = "🗡️ 选择武器",
+            special_abilities = "✨ 特殊能力",
+            attack_button = "⚡ 攻击按钮",
         },
         
         -- Settings Tab
@@ -317,6 +439,21 @@ LanguageSystem.Languages = {
             teleport_to_job = "传送到服务器",
             copy_job_id = "复制当前服务器ID",
         },
+
+        -- Teleport Tab
+        teleport = {
+            title = "传送",
+        },
+
+        -- Players Tab
+        players = {
+            title = "玩家",
+            movement = "移动",
+            player_info = "玩家信息",
+            speed_boost = "🏃 速度提升",
+            jump_power = "🦘 跳跃力量",
+            player_name = "📝 玩家名称",
+        },
         
         -- Humanoid Tab
         humanoid = {
@@ -341,6 +478,27 @@ LanguageSystem.Languages = {
             teleport_failed = "传送失败",
             invalid_input = "无效输入",
             please_wait = "请稍候...",
+            welcome = "欢迎！",
+            press_left_ctrl = "按 Left Ctrl 打开/关闭 UI",
+            success = "成功！",
+            button_pressed = "您按下了按钮",
+            confirm_action = "确认操作",
+            want_to_continue = "您要继续吗？",
+            confirm = "✅ 确认",
+            cancel = "❌ 取消",
+            confirmed = "已确认",
+            action_completed = "操作完成",
+            enabled = "已启用",
+            speed_set_50 = "速度设置为 50",
+            disabled = "已禁用",
+            speed_reset = "速度重置为正常",
+            weapon_switched = "武器已切换",
+            using_weapon = "您正在使用: ",
+            attack = "攻击！",
+            skill_used = "技能已使用",
+            loading = "加载中...",
+            saved = "已保存",
+            your_name_is = "您的名字是: ",
         },
         
         -- Descriptions
@@ -352,6 +510,19 @@ LanguageSystem.Languages = {
             noclip_desc = "穿墙模式",
             anti_afk_desc = "防止被踢出",
             server_hop_desc = "加入随机服务器",
+            test_notification_desc = "点击显示通知",
+            confirmation_dialog_desc = "显示带有选择按钮的对话框",
+            speed_boost_desc = "走得更快",
+            jump_power_desc = "调整跳跃高度",
+            select_weapon_desc = "选择要使用的武器",
+            special_abilities_desc = "可以选择多个",
+            player_name_desc = "输入您的名字...",
+            attack_button_desc = "按下攻击",
+        },
+
+        -- Instructions and paragraphs
+        instructions = {
+            main_instructions = "这是 Fluent UI 用法示例\n您可以根据需要自定义\n感谢使用 ATG HUB！",
         },
     },
 }
