@@ -27,6 +27,14 @@ LanguageSystem.autoTranslate = true
 LanguageSystem.translationCache = {}
 LanguageSystem.manualTranslations = {}
 LanguageSystem.friendlyKeyCache = {}
+LanguageSystem.persistentCache = {}
+LanguageSystem.loadedPersistentLanguages = {}
+LanguageSystem.cacheDirtyLanguages = {}
+LanguageSystem.cacheFlushScheduled = false
+LanguageSystem.cacheFolder = "ATG_LanguageCache"
+LanguageSystem.cacheFilePrefix = "locale_"
+LanguageSystem.cacheFileExtension = ".json"
+LanguageSystem.maxPersistentEntries = 1200
 
 LanguageSystem.Languages = {
     en = {code = "en", name = "English", flag = "🇺🇸"},
@@ -71,6 +79,40 @@ else
             return {Success = false, Body = "{}"}
         end,
     }
+end
+
+local FileAPI = {
+    read = type(readfile) == "function" and readfile or nil,
+    write = type(writefile) == "function" and writefile or nil,
+    exists = type(isfile) == "function" and isfile or nil,
+    isfolder = type(isfolder) == "function" and isfolder or nil,
+    makefolder = type(makefolder) == "function" and makefolder or nil,
+}
+
+LanguageSystem.hasFileIO = FileAPI.read ~= nil and FileAPI.write ~= nil and FileAPI.exists ~= nil
+LanguageSystem.hasFolderIO = LanguageSystem.hasFileIO and FileAPI.isfolder ~= nil and FileAPI.makefolder ~= nil
+
+local function getCacheFilePath(lang)
+    lang = tostring(lang)
+    if LanguageSystem.hasFolderIO then
+        return string.format("%s/%s%s%s", LanguageSystem.cacheFolder, LanguageSystem.cacheFilePrefix, lang, LanguageSystem.cacheFileExtension)
+    end
+    return string.format("%s%s%s", LanguageSystem.cacheFilePrefix, lang, LanguageSystem.cacheFileExtension)
+end
+
+local function ensureCacheDirectory()
+    if not LanguageSystem.hasFolderIO then
+        return LanguageSystem.hasFileIO
+    end
+    local ok, exists = pcall(FileAPI.isfolder, LanguageSystem.cacheFolder)
+    if ok and exists then
+        return true
+    end
+    if not ok and exists == nil then
+        return false
+    end
+    local created = pcall(FileAPI.makefolder, LanguageSystem.cacheFolder)
+    return created == true
 end
 
 local rawHttpRequest = nil
@@ -161,6 +203,145 @@ local function prettifyKey(raw)
     return pretty
 end
 
+local function ensureLanguageBuckets(lang)
+    LanguageSystem.translationCache[lang] = LanguageSystem.translationCache[lang] or {}
+    LanguageSystem.manualTranslations[lang] = LanguageSystem.manualTranslations[lang] or {}
+    LanguageSystem.persistentCache[lang] = LanguageSystem.persistentCache[lang] or {}
+end
+
+local function getPersistentEntryCount(lang)
+    local bucket = LanguageSystem.persistentCache[lang]
+    if not bucket then return 0 end
+    local count = 0
+    for _ in pairs(bucket) do
+        count += 1
+    end
+    return count
+end
+
+function LanguageSystem:TrimPersistentCache(lang)
+    local bucket = self.persistentCache[lang]
+    if not bucket then return end
+    local entryCount = getPersistentEntryCount(lang)
+    if entryCount <= self.maxPersistentEntries then
+        return
+    end
+
+    local runtimeCache = self.translationCache[lang] or {}
+    repeat
+        local oldestKey, oldestTimestamp = nil, math.huge
+        for key, meta in pairs(runtimeCache) do
+            if bucket[key] and meta and meta.timestamp and meta.timestamp < oldestTimestamp then
+                oldestTimestamp = meta.timestamp
+                oldestKey = key
+            end
+        end
+        if not oldestKey then
+            break
+        end
+        bucket[oldestKey] = nil
+        runtimeCache[oldestKey] = nil
+        entryCount -= 1
+    until entryCount <= self.maxPersistentEntries
+end
+
+function LanguageSystem:WriteCacheToFile(lang)
+    if not self.hasFileIO then
+        return
+    end
+    ensureCacheDirectory()
+    local entries = self.persistentCache[lang]
+    if not entries or next(entries) == nil then
+        return
+    end
+
+    local payload = {
+        version = 1,
+        entries = entries,
+    }
+
+    local ok, encoded = pcall(HttpService.JSONEncode, HttpService, payload)
+    if not ok then
+        return
+    end
+
+    pcall(FileAPI.write, getCacheFilePath(lang), encoded)
+end
+
+local function queueCacheFlush()
+    if not LanguageSystem.hasFileIO then
+        return
+    end
+    if LanguageSystem.cacheFlushScheduled then
+        return
+    end
+    LanguageSystem.cacheFlushScheduled = true
+    task.defer(function()
+        LanguageSystem.cacheFlushScheduled = false
+        for lang in pairs(LanguageSystem.cacheDirtyLanguages) do
+            LanguageSystem:WriteCacheToFile(lang)
+        end
+        LanguageSystem.cacheDirtyLanguages = {}
+    end)
+end
+
+function LanguageSystem:EnsurePersistentCache(lang)
+    if not self.hasFileIO then
+        ensureLanguageBuckets(lang)
+        return
+    end
+
+    if self.loadedPersistentLanguages[lang] then
+        ensureLanguageBuckets(lang)
+        return
+    end
+
+    ensureLanguageBuckets(lang)
+    ensureCacheDirectory()
+
+    local path = getCacheFilePath(lang)
+    local ok, exists = pcall(FileAPI.exists, path)
+    if not ok or not exists then
+        self.loadedPersistentLanguages[lang] = true
+        return
+    end
+
+    local readOk, contents = pcall(FileAPI.read, path)
+    if not readOk or type(contents) ~= "string" or contents == "" then
+        self.loadedPersistentLanguages[lang] = true
+        return
+    end
+
+    local decodeOk, decoded = pcall(HttpService.JSONDecode, HttpService, contents)
+    if decodeOk and type(decoded) == "table" then
+        local entries = decoded.entries or decoded
+        if type(entries) == "table" then
+            for source, translated in pairs(entries) do
+                if type(source) == "string" and type(translated) == "string" then
+                    self.persistentCache[lang][source] = translated
+                    self.translationCache[lang][source] = {
+                        translatedText = translated,
+                        timestamp = os.time(),
+                    }
+                end
+            end
+        end
+    end
+
+    self.loadedPersistentLanguages[lang] = true
+end
+
+function LanguageSystem:PersistTranslation(lang, sourceText, translatedText)
+    if not sourceText or not translatedText then
+        return
+    end
+    ensureLanguageBuckets(lang)
+    self.persistentCache[lang][sourceText] = translatedText
+    self.cacheDirtyLanguages[lang] = true
+    self:TrimPersistentCache(lang)
+    queueCacheFlush()
+end
+
 local function resolveSourceText(raw, defaultText)
     if type(defaultText) == "string" and defaultText ~= "" then
         return defaultText
@@ -225,6 +406,9 @@ function LanguageSystem:GetText(rawText, defaultText)
         self.currentLanguage = self.fallbackLanguage
     end
 
+    ensureLanguageBuckets(self.currentLanguage)
+    self:EnsurePersistentCache(self.currentLanguage)
+
     local sourceText = resolveSourceText(rawText, defaultText)
     sourceText = normalizeUnicode(sourceText)
 
@@ -244,16 +428,17 @@ function LanguageSystem:GetText(rawText, defaultText)
     end
 
     local translated = translateText(self.libreTranslateURL, sourceText, self.fallbackLanguage, self.currentLanguage)
-    if not translated or translated == "" then
+    local translationSucceeded = translated ~= nil and translated ~= ""
+    if not translationSucceeded then
         return sourceText
     end
 
-    if cacheBucket then
-        cacheBucket[sourceText] = {
-            translatedText = translated,
-            timestamp = os.time(),
-        }
-    end
+    cacheBucket[sourceText] = {
+        translatedText = translated,
+        timestamp = os.time(),
+    }
+
+    self:PersistTranslation(self.currentLanguage, sourceText, translated)
 
     return translated
 end
@@ -281,6 +466,9 @@ function LanguageSystem:SetLanguage(langCode)
 
     local oldLanguage = self.currentLanguage
     self.currentLanguage = langCode
+
+    ensureLanguageBuckets(langCode)
+    self:EnsurePersistentCache(langCode)
 
     if getgenv and type(getgenv) == "function" then
         local env = getgenv()
@@ -317,11 +505,13 @@ function LanguageSystem:RegisterTranslation(langCode, sourceText, translatedText
     if not self:IsLanguageSupported(langCode) then
         return false
     end
+    ensureLanguageBuckets(langCode)
     self.manualTranslations[langCode][sourceText] = translatedText
     self.translationCache[langCode][sourceText] = {
         translatedText = translatedText,
         timestamp = os.time(),
     }
+    self:PersistTranslation(langCode, sourceText, translatedText)
     return true
 end
 
@@ -464,10 +654,25 @@ end
 -- ============================================================
 -- CACHE UTILITIES & TESTING
 -- ============================================================
-function LanguageSystem:ClearTranslationCache()
+function LanguageSystem:ClearTranslationCache(resetPersistent)
     self.translationCache = {}
     for _, code in ipairs(self.supportedLanguages) do
+        ensureLanguageBuckets(code)
         self.translationCache[code] = {}
+        if resetPersistent then
+            self.persistentCache[code] = {}
+            self.loadedPersistentLanguages[code] = false
+            if self.hasFileIO then
+                pcall(FileAPI.write, getCacheFilePath(code), HttpService:JSONEncode({version = 1, entries = {}}))
+            end
+        else
+            for source, translated in pairs(self.persistentCache[code]) do
+                self.translationCache[code][source] = {
+                    translatedText = translated,
+                    timestamp = os.time(),
+                }
+            end
+        end
     end
 end
 
@@ -486,8 +691,10 @@ end
 
 function LanguageSystem:Initialize()
     refreshSupportedLanguages()
-    self:ClearTranslationCache()
+    ensureCacheDirectory()
     loadSavedLanguage()
+    ensureLanguageBuckets(self.currentLanguage)
+    self:EnsurePersistentCache(self.currentLanguage)
     return self
 end
 
