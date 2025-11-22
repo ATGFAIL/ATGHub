@@ -1,10 +1,15 @@
 --[[
 ================================================================
-ATG HUB - Premium Language System
+ATG HUB - Premium Auto Translation System
 ----------------------------------------------------------------
-* Deterministic English fallbacks for key-style identifiers (e.g. "main.auto_sell" → "Auto Sell").
-* Optional manual overrides and auto-translation via LibreTranslate.
-* Central callback bus for LanguageIntegration.lua and any Fluent UI elements.
+This module auto-translates every UI Title/Description on demand by
+sending the original English text directly to LibreTranslate. No
+pre-baked language tables are required—developers simply wrap any
+English string with Lang:T("Hello world") and the system will:
+  1. Detect the request.
+  2. Forward the English text to LibreTranslate using the active locale.
+  3. Cache the translated result per language.
+  4. Fall back to the original text if the API is unavailable.
 ================================================================
 ]]
 
@@ -21,152 +26,7 @@ LanguageSystem.autoTranslate = true
 
 LanguageSystem.translationCache = {}
 LanguageSystem.manualTranslations = {}
-LanguageSystem.baseTextOverrides = {
-    -- Tabs / Sections
-    ["tabs.main"] = "Main",
-    ["tabs.farm"] = "Farm",
-    ["tabs.egg"] = "Egg",
-    ["tabs.event"] = "Event",
-    ["tabs.autoplay"] = "Auto Play",
-    ["tabs.screen"] = "Screen",
-    ["tabs.humanoid"] = "Humanoid",
-    ["tabs.players"] = "Players",
-    ["tabs.server"] = "Server",
-    ["tabs.settings"] = "Settings",
-
-    -- Settings / Common
-    ["settings.title"] = "Settings",
-    ["settings.language"] = "Language",
-    ["settings.select_language"] = "Select language",
-    ["common.loading"] = "Loading...",
-    ["common.loading_player_info"] = "Loading player information...",
-    ["common.select_items"] = "Select items",
-    ["common.multi_select"] = "Multi-select",
-    ["common.auto_buy_desc"] = "Automatically purchase the selected items",
-    ["common.success"] = "Success",
-
-    -- Main panel text
-    ["main.player_info"] = "Player information",
-    ["main.name"] = "Name",
-    ["main.date"] = "Date",
-    ["main.played_time"] = "Played time",
-    ["main.auto_buy_food"] = "Auto buy food",
-    ["main.auto_buy_animals"] = "Auto buy animals",
-    ["main.auto_feed"] = "Auto feed",
-    ["main.auto_feed_animals"] = "Auto feed animals",
-    ["main.auto_sell"] = "Auto sell",
-    ["main.select_animals_feed"] = "Select animals to feed",
-    ["main.feed_all_desc"] = "Feed all selected animals automatically",
-    ["main.feed_animals_desc"] = "Continuously feeds every selected animal",
-    ["main.select_animals_sell"] = "Select animals to sell",
-    ["main.select_animals_sell_desc"] = "Choose animals that will be sold automatically",
-    ["main.auto_buy_food_desc"] = "Purchase food items on a loop",
-
-    -- Descriptions used across demos / integrations
-    ["descriptions.test_notification_desc"] = "Show a multi-language notification",
-    ["descriptions.confirmation_dialog_desc"] = "Display a confirmation dialog",
-    ["descriptions.speed_boost_desc"] = "Toggle a faster walk speed",
-    ["descriptions.jump_power_desc"] = "Adjust jump power",
-    ["descriptions.player_name_desc"] = "Enter a display name",
-    ["descriptions.auto_farm_desc"] = "Automatically farm enemies",
-    ["descriptions.select_weapon_desc"] = "Pick the weapon to use",
-    ["descriptions.special_abilities_desc"] = "Select special abilities",
-    ["descriptions.attack_button_desc"] = "Keybind used to attack",
-
-    -- Notifications & dynamic strings
-    ["notifications.welcome"] = "Welcome to ATG Hub",
-    ["notifications.script_loaded"] = "Script loaded successfully",
-    ["notifications.press_left_ctrl"] = "Press Left Control to toggle the UI",
-    ["notifications.success"] = "Success",
-    ["notifications.button_pressed"] = "Button pressed",
-    ["notifications.confirm_action"] = "Confirm action",
-    ["notifications.want_to_continue"] = "Do you want to continue?",
-    ["notifications.confirm"] = "Confirm",
-    ["notifications.confirmed"] = "Confirmed",
-    ["notifications.action_completed"] = "Action completed",
-    ["notifications.cancel"] = "Cancel",
-    ["notifications.enabled"] = "Enabled",
-    ["notifications.disabled"] = "Disabled",
-    ["notifications.speed_set_50"] = "Speed set to 50",
-    ["notifications.speed_reset"] = "Speed reset to default",
-    ["notifications.saved"] = "Saved",
-    ["notifications.your_name_is"] = "Your name is: ",
-    ["notifications.weapon_switched"] = "Weapon switched",
-    ["notifications.using_weapon"] = "Using weapon: ",
-    ["notifications.skill_used"] = "Skill used",
-    ["notifications.attack"] = "Attack",
-    ["notifications.loading"] = "Loading...",
-    ["notifications.feature_enabled"] = "Feature enabled",
-    ["notifications.feature_disabled"] = "Feature disabled",
-    ["notifications.please_wait"] = "Please wait...",
-    ["notifications.auto_sell_warn"] = "Auto-sell warning",
-    ["notifications.select_animal_sell"] = "Select at least one animal before selling",
-    ["notifications.tycoon_folder_not_found"] = "Tycoon folder not found",
-    ["notifications.pickup_count"] = "Picked up %d animals!",
-
-    -- Screen utilities
-    ["screen.remove_gui"] = "Remove GUI",
-    ["screen.remove_gui_desc"] = "Remove every GUI from the screen",
-    ["screen.remove_notify"] = "Block notifications",
-    ["screen.remove_notify_desc"] = "Hide in-game notifications",
-
-    -- Server management
-    ["server.job_id"] = "Job ID",
-    ["server.input_job_id_title"] = "Input Job ID",
-    ["server.paste_job_id_here"] = "Paste job ID here",
-    ["server.teleport_to_job_title"] = "Teleport to job",
-    ["server.teleport_to_job_desc"] = "Teleport to the server with the provided Job ID",
-    ["server.copy_current_job_id_title"] = "Copy current Job ID",
-    ["server.copy_current_job_id_desc"] = "Copy the current server Job ID",
-
-    -- Farm helpers
-    ["farm.animal_management"] = "Animal management",
-    ["farm.pickup_all_animals"] = "Pick up all animals",
-    ["farm.pickup_all_animals_desc"] = "Collect every animal back into storage",
-    ["farm.auto_place_animals"] = "Auto place animals",
-    ["farm.select_animals_place_title"] = "Select animals to place",
-    ["farm.select_animals_place_description"] = "Choose animals that should be placed automatically",
-    ["farm.auto_pickup_animals"] = "Auto pick up animals",
-    ["farm.select_animals_pickup_title"] = "Select animals to pick up",
-    ["farm.select_animals_pickup_description"] = "Choose animals that will be collected automatically",
-
-    -- Egg / events / autoplay
-    ["egg.dino_exchange"] = "Dino exchange",
-    ["event.desert_event"] = "Desert event",
-    ["autoplay.play"] = "Play",
-    ["autoplay.auto_play"] = "Auto play",
-    ["autoplay.swap_animal"] = "Swap animal",
-    ["autoplay.config"] = "Config",
-    ["autoplay.advanced"] = "Advanced",
-
-    -- Players / humanoid helpers
-    ["players.player"] = "Player",
-    ["players.teleport"] = "Teleport",
-    ["players.method"] = "Teleport method",
-    ["players.instant"] = "Instant",
-    ["players.tween"] = "Tween",
-    ["players.moveto"] = "Move to",
-    ["players.player_info"] = "Player info",
-    ["players.player_name"] = "Player name",
-    ["players.movement"] = "Movement",
-    ["players.speed_boost"] = "Speed boost",
-    ["players.jump_power"] = "Jump power",
-    ["humanoid.speed_jump"] = "Speed & jump",
-    ["humanoid.fly_noclip"] = "Fly & noclip",
-}
-
-LanguageSystem.manualTranslations = {}
-LanguageSystem.derivedTextCache = {}
-LanguageSystem.wordOverrides = {
-    ui = "UI",
-    id = "ID",
-    xp = "XP",
-    hp = "HP",
-    fps = "FPS",
-    afk = "AFK",
-    pvp = "PvP",
-    pve = "PvE",
-}
+LanguageSystem.friendlyKeyCache = {}
 
 LanguageSystem.Languages = {
     en = {code = "en", name = "English", flag = "🇺🇸"},
@@ -182,32 +42,21 @@ LanguageSystem.fallbackLanguage = "en"
 LanguageSystem.languageChangeCallbacks = {}
 
 -- ============================================================
--- HELPER FUNCTIONS
+-- INTERNAL HELPERS
 -- ============================================================
 local function refreshSupportedLanguages()
     LanguageSystem.supportedLanguages = {}
     for code in pairs(LanguageSystem.Languages) do
         table.insert(LanguageSystem.supportedLanguages, code)
+        LanguageSystem.translationCache[code] = LanguageSystem.translationCache[code] or {}
+        LanguageSystem.manualTranslations[code] = LanguageSystem.manualTranslations[code] or {}
     end
     table.sort(LanguageSystem.supportedLanguages)
 end
 
-local function ensureLanguageBuckets(langCode)
-    LanguageSystem.translationCache[langCode] = LanguageSystem.translationCache[langCode] or {}
-    LanguageSystem.manualTranslations[langCode] = LanguageSystem.manualTranslations[langCode] or {}
-end
-
-local function initTranslationCache()
-    for _, code in ipairs(LanguageSystem.supportedLanguages) do
-        ensureLanguageBuckets(code)
-    end
-end
-
 refreshSupportedLanguages()
-initTranslationCache()
 
--- HttpService shim
-local HttpService = nil
+local HttpService
 if game and game.GetService then
     HttpService = game:GetService("HttpService")
 else
@@ -224,7 +73,6 @@ else
     }
 end
 
--- Unicode helpers
 local function validateUnicode(text)
     if not text or type(text) ~= "string" then
         return false
@@ -245,53 +93,46 @@ local function normalizeUnicode(text)
 end
 
 local function toTitleCase(segment)
-    local chunks = {}
-    for token in segment:gmatch("[^_%-]+") do
-        local lower = token:lower()
-        local override = LanguageSystem.wordOverrides[lower]
-        if override then
-            table.insert(chunks, override)
-        elseif #token <= 2 then
-            table.insert(chunks, lower:upper())
-        else
-            table.insert(chunks, lower:sub(1, 1):upper() .. lower:sub(2))
-        end
-    end
-    return table.concat(chunks, " ")
+    return segment:gsub("_%s*", " ")
+        :gsub("(%a)([%w']*)", function(first, rest)
+            return first:upper() .. rest:lower()
+        end)
 end
 
-local function resolveBaseText(keyPath, defaultText)
-    if type(keyPath) ~= "string" or keyPath == "" then
-        return "INVALID_KEY"
+local function prettifyKey(raw)
+    if LanguageSystem.friendlyKeyCache[raw] then
+        return LanguageSystem.friendlyKeyCache[raw]
     end
+    local lastChunk = raw:match("([%w_%-]+)$") or raw
+    local pretty = toTitleCase(lastChunk)
+    LanguageSystem.friendlyKeyCache[raw] = pretty
+    return pretty
+end
 
+local function resolveSourceText(raw, defaultText)
     if type(defaultText) == "string" and defaultText ~= "" then
-        LanguageSystem.baseTextOverrides[keyPath] = defaultText
-        LanguageSystem.derivedTextCache[keyPath] = defaultText
         return defaultText
     end
-
-    if LanguageSystem.baseTextOverrides[keyPath] then
-        return LanguageSystem.baseTextOverrides[keyPath]
+    if type(raw) ~= "string" or raw == "" then
+        return "INVALID_TEXT"
     end
 
-    if LanguageSystem.derivedTextCache[keyPath] then
-        return LanguageSystem.derivedTextCache[keyPath]
+    -- If the developer already passed natural English (contains spaces or punctuation) use it verbatim.
+    if raw:find("%s") or raw:find("[,:!?]") then
+        return raw
     end
 
-    local segment = keyPath:match("([%w_%-]+)$") or keyPath
-    local friendly = toTitleCase(segment)
-    if friendly == "" then
-        friendly = keyPath
+    -- Otherwise assume key-style identifier (e.g. main.auto_sell)
+    if raw:find("%.") or raw:find("_") then
+        return prettifyKey(raw)
     end
 
-    LanguageSystem.derivedTextCache[keyPath] = friendly
-    return friendly
+    return raw
 end
 
 local function translateText(url, text, sourceLang, targetLang)
     if not HttpService or not HttpService.RequestAsync then
-        return text
+        return nil
     end
 
     local payload = {
@@ -300,15 +141,13 @@ local function translateText(url, text, sourceLang, targetLang)
         target = targetLang,
     }
 
-    local jsonBody = HttpService:JSONEncode(payload)
+    local body = HttpService:JSONEncode(payload)
     local success, response = pcall(function()
         return HttpService:RequestAsync({
             Url = url,
             Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json",
-            },
-            Body = jsonBody,
+            Headers = {['Content-Type'] = 'application/json'},
+            Body = body,
         })
     end)
 
@@ -334,48 +173,42 @@ local function loadSavedLanguage()
 end
 
 -- ============================================================
--- CORE API
+-- CORE TRANSLATION PIPELINE
 -- ============================================================
-function LanguageSystem:GetText(keyPath, defaultText)
-    if type(keyPath) ~= "string" or keyPath == "" then
-        return "INVALID_KEY"
+function LanguageSystem:GetText(rawText, defaultText)
+    if type(rawText) ~= "string" and type(defaultText) ~= "string" then
+        return "INVALID_TEXT"
     end
 
     if not self:IsLanguageSupported(self.currentLanguage) then
         self.currentLanguage = self.fallbackLanguage
     end
 
-    local baseText = resolveBaseText(keyPath, defaultText)
-    baseText = normalizeUnicode(baseText)
+    local sourceText = resolveSourceText(rawText, defaultText)
+    sourceText = normalizeUnicode(sourceText)
 
-    if self.currentLanguage == self.fallbackLanguage then
-        return baseText
+    if self.currentLanguage == self.fallbackLanguage or not self.autoTranslate then
+        return sourceText
     end
 
     local manual = self.manualTranslations[self.currentLanguage]
-    if manual and manual[keyPath] then
-        return manual[keyPath]
+    if manual and manual[sourceText] then
+        return manual[sourceText]
     end
 
     local cacheBucket = self.translationCache[self.currentLanguage]
-    if cacheBucket then
-        local cached = cacheBucket[keyPath]
-        if cached and (os.time() - cached.timestamp) < self.cacheExpiry then
-            return cached.translatedText
-        end
+    local cached = cacheBucket and cacheBucket[sourceText]
+    if cached and (os.time() - cached.timestamp) < self.cacheExpiry then
+        return cached.translatedText
     end
 
-    if not self.autoTranslate then
-        return baseText
-    end
-
-    local translated = translateText(self.libreTranslateURL, baseText, self.fallbackLanguage, self.currentLanguage)
+    local translated = translateText(self.libreTranslateURL, sourceText, self.fallbackLanguage, self.currentLanguage)
     if not translated or translated == "" then
-        translated = baseText
+        return sourceText
     end
 
     if cacheBucket then
-        cacheBucket[keyPath] = {
+        cacheBucket[sourceText] = {
             translatedText = translated,
             timestamp = os.time(),
         }
@@ -384,22 +217,23 @@ function LanguageSystem:GetText(keyPath, defaultText)
     return translated
 end
 
-function LanguageSystem:T(keyPath, defaultText)
-    return self:GetText(keyPath, defaultText)
+function LanguageSystem:T(rawText, defaultText)
+    return self:GetText(rawText, defaultText)
 end
 
 LanguageSystem.Get = LanguageSystem.GetText
 
+-- ============================================================
+-- LANGUAGE MANAGEMENT
+-- ============================================================
 function LanguageSystem:SetLanguage(langCode)
     if type(langCode) ~= "string" then
         return false
     end
-
     langCode = langCode:lower()
     if not self:IsLanguageSupported(langCode) then
         return false
     end
-
     if langCode == self.currentLanguage then
         return true
     end
@@ -434,25 +268,19 @@ function LanguageSystem:TriggerLanguageChangeCallbacks(oldLang, newLang)
     end
 end
 
-function LanguageSystem:RegisterKey(keyPath, englishText)
-    if type(keyPath) ~= "string" or type(englishText) ~= "string" then
-        return false
-    end
-    self.baseTextOverrides[keyPath] = englishText
-    self.derivedTextCache[keyPath] = englishText
-    return true
-end
-
-function LanguageSystem:RegisterTranslation(langCode, keyPath, translatedText)
-    if type(langCode) ~= "string" or type(keyPath) ~= "string" or type(translatedText) ~= "string" then
+function LanguageSystem:RegisterTranslation(langCode, sourceText, translatedText)
+    if type(langCode) ~= "string" or type(sourceText) ~= "string" or type(translatedText) ~= "string" then
         return false
     end
     langCode = langCode:lower()
-    ensureLanguageBuckets(langCode)
-    self.manualTranslations[langCode][keyPath] = translatedText
-    if self.translationCache[langCode] then
-        self.translationCache[langCode][keyPath] = nil
+    if not self:IsLanguageSupported(langCode) then
+        return false
     end
+    self.manualTranslations[langCode][sourceText] = translatedText
+    self.translationCache[langCode][sourceText] = {
+        translatedText = translatedText,
+        timestamp = os.time(),
+    }
     return true
 end
 
@@ -463,13 +291,10 @@ function LanguageSystem:AddLanguage(langCode, data)
     if type(data.name) ~= "string" or data.name == "" then
         return false
     end
-
     langCode = langCode:lower()
     data.code = langCode
     self.Languages[langCode] = data
-
     refreshSupportedLanguages()
-    ensureLanguageBuckets(langCode)
     return true
 end
 
@@ -478,6 +303,7 @@ function LanguageSystem:SetLibreTranslateURL(url)
         return false
     end
     self.libreTranslateURL = url
+    self:ClearTranslationCache()
     return true
 end
 
@@ -505,11 +331,9 @@ function LanguageSystem:GetAvailableLanguages()
             display = string.format("%s %s", data.flag or "", data.name or code),
         })
     end
-
     table.sort(languages, function(a, b)
         return a.name < b.name
     end)
-
     return languages
 end
 
@@ -532,8 +356,7 @@ function LanguageSystem:IsLanguageSupported(langCode)
     if type(langCode) ~= "string" then
         return false
     end
-    langCode = langCode:lower()
-    return self.Languages[langCode] ~= nil
+    return self.Languages[langCode:lower()] ~= nil
 end
 
 -- ============================================================
@@ -542,7 +365,6 @@ end
 local function formatDate(locale, timestamp)
     timestamp = timestamp or os.time()
     local dateTable = os.date("*t", timestamp)
-
     if locale == "th" then
         local thaiYear = dateTable.year + 543
         return string.format("%02d/%02d/%d", dateTable.day, dateTable.month, thaiYear)
@@ -603,28 +425,27 @@ end
 -- ============================================================
 function LanguageSystem:ClearTranslationCache()
     self.translationCache = {}
-    initTranslationCache()
+    for _, code in ipairs(self.supportedLanguages) do
+        self.translationCache[code] = {}
+    end
 end
 
 function LanguageSystem:TestAutoTranslation(text, targetLang)
     if type(text) ~= "string" or text == "" or type(targetLang) ~= "string" then
         return "❌ Invalid parameters"
     end
-
     print("[LanguageSystem] Testing auto-translation...")
     print("Original text: " .. text)
     print("Target language: " .. targetLang)
-
     local translated = translateText(self.libreTranslateURL, text, self.fallbackLanguage, targetLang)
     translated = translated or text
     print("Translated result: " .. translated)
-
     return translated
 end
 
 function LanguageSystem:Initialize()
     refreshSupportedLanguages()
-    initTranslationCache()
+    self:ClearTranslationCache()
     loadSavedLanguage()
     return self
 end
