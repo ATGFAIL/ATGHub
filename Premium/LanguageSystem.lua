@@ -1,11 +1,19 @@
 -- ============================================================
 -- ATG HUB - Multi-Language System
 -- Centralized Language Data & Management
--- Enhanced with full Unicode support, date/number formatting, and error handling
+-- Enhanced with full Unicode support, date/number formatting, error handling, and auto-translation
 -- ============================================================
 
 local LanguageSystem = {}
 LanguageSystem.__index = LanguageSystem
+
+-- ============================================================
+-- AUTO-TRANSLATION CONFIGURATION
+-- ============================================================
+LanguageSystem.autoTranslationEnabled = true
+LanguageSystem.libreTranslateURL = "https://libretranslate.com/translate" -- Public instance (may have rate limits)
+LanguageSystem.translationCache = {} -- Cache for auto-translated strings
+LanguageSystem.cacheExpiry = 3600 -- Cache expiry in seconds (1 hour)
 
 -- ============================================================
 -- LANGUAGE DATA STRUCTURE
@@ -1474,10 +1482,95 @@ LanguageSystem.supportedLanguages = {"en", "th", "zh", "ja", "ko"}
 LanguageSystem.fallbackLanguage = "en"
 
 -- ============================================================
+-- AUTO-TRANSLATION FUNCTIONS
+-- ============================================================
+
+-- Initialize translation cache
+local function initTranslationCache()
+    for _, langCode in ipairs(LanguageSystem.supportedLanguages) do
+        LanguageSystem.translationCache[langCode] = LanguageSystem.translationCache[langCode] or {}
+    end
+end
+
+-- Auto-translate using LibreTranslate API
+local function autoTranslate(text, targetLang)
+    if not LanguageSystem.autoTranslationEnabled or targetLang == "en" then
+        return text
+    end
+
+    -- Check cache first
+    local cacheKey = text .. "|" .. targetLang
+    local cached = LanguageSystem.translationCache[targetLang][cacheKey]
+    if cached and (os.time() - (cached.timestamp or 0)) < LanguageSystem.cacheExpiry then
+        return cached.translation
+    end
+
+    -- Attempt API call
+    local success, result = pcall(function()
+        local HttpService = game:GetService("HttpService")
+        local payload = HttpService:JSONEncode({
+            q = text,
+            source = "en",
+            target = targetLang,
+            format = "text"
+        })
+
+        local response = game:HttpPost(LanguageSystem.libreTranslateURL, payload, "application/json")
+        local decoded = HttpService:JSONDecode(response)
+
+        return decoded.translatedText
+    end)
+
+    if success and result then
+        -- Cache the result
+        LanguageSystem.translationCache[targetLang][cacheKey] = {
+            translation = result,
+            timestamp = os.time()
+        }
+        return result
+    else
+        -- Fallback: return original text with indicator
+        return "🔄 " .. text
+    end
+end
+
+-- Set LibreTranslate API URL
+function LanguageSystem:SetLibreTranslateURL(url)
+    self.libreTranslateURL = url
+end
+
+-- Enable/disable auto-translation
+function LanguageSystem:SetAutoTranslation(enabled)
+    self.autoTranslationEnabled = enabled
+end
+
+-- Clear translation cache
+function LanguageSystem:ClearTranslationCache()
+    self.translationCache = {}
+    initTranslationCache()
+end
+
+-- Test auto-translation (for debugging)
+function LanguageSystem:TestAutoTranslation(testText, targetLang)
+    if not testText or not targetLang then
+        return "❌ Invalid parameters"
+    end
+
+    print("[LanguageSystem] Testing auto-translation...")
+    print("Original text: " .. testText)
+    print("Target language: " .. targetLang)
+
+    local result = autoTranslate(testText, targetLang)
+    print("Translated result: " .. result)
+
+    return result
+end
+
+-- ============================================================
 -- CORE FUNCTIONS
 -- ============================================================
 
--- Enhanced GetText with error handling and Unicode validation
+-- Enhanced GetText with error handling, Unicode validation, and auto-translation
 function LanguageSystem:GetText(keyPath)
     -- Validate input
     if not keyPath or type(keyPath) ~= "string" then
@@ -1516,8 +1609,29 @@ function LanguageSystem:GetText(keyPath)
                 if type(fallbackValue) == "table" and fallbackValue[k] then
                     fallbackValue = fallbackValue[k]
                 else
-                    warn("[LanguageSystem] Translation key '" .. keyPath .. "' not found in any language")
-                    return keyPath -- Return key path if not found anywhere
+                    -- No manual translation found, try auto-translation
+                    if self.autoTranslationEnabled and self.currentLanguage ~= "en" then
+                        local englishText = self.Languages.en
+                        for _, engKey in ipairs(keys) do
+                            if type(englishText) == "table" and englishText[engKey] then
+                                englishText = englishText[engKey]
+                            else
+                                englishText = keyPath -- Fallback to key path
+                                break
+                            end
+                        end
+
+                        if type(englishText) == "string" then
+                            local autoTranslated = autoTranslate(englishText, self.currentLanguage)
+                            if autoTranslated and autoTranslated ~= ("🔄 " .. englishText) then
+                                print("[LanguageSystem] Auto-translated '" .. keyPath .. "' to '" .. autoTranslated .. "'")
+                                return normalizeUnicode(autoTranslated)
+                            end
+                        end
+                    end
+
+                    warn("[LanguageSystem] Translation key '" .. keyPath .. "' not found, using fallback")
+                    return "🔄 " .. keyPath -- Indicate auto-translation attempted
                 end
             end
             value = fallbackValue
@@ -1716,6 +1830,9 @@ end
 
 -- Initialize language system
 function LanguageSystem:Initialize()
+    -- Initialize translation cache
+    initTranslationCache()
+
     -- Load saved language from getgenv
     if getgenv and getgenv().ATG_Language then
         local savedLang = getgenv().ATG_Language
@@ -1723,7 +1840,7 @@ function LanguageSystem:Initialize()
             self.currentLanguage = savedLang
         end
     end
-    
+
     return self
 end
 
