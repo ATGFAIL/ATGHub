@@ -11,7 +11,7 @@ LanguageSystem.__index = LanguageSystem
 -- AUTO-TRANSLATION CONFIGURATION
 -- ============================================================
 LanguageSystem.autoTranslationEnabled = true
-LanguageSystem.libreTranslateURL = "https://libretranslate.com/translate" -- Public instance (may have rate limits)
+LanguageSystem.libreTranslateURL = "http://119.59.124.192:5000/translate" -- Custom LibreTranslate instance
 LanguageSystem.translationCache = {} -- Cache for auto-translated strings
 LanguageSystem.cacheExpiry = 3600 -- Cache expiry in seconds (1 hour)
 
