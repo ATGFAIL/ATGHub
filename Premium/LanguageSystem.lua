@@ -13,8 +13,53 @@ English string with Lang:T("Hello world") and the system will:
 ================================================================
 ]]
 
+local LANGUAGE_SYSTEM_VERSION = "2025.11.22"
+
+local function safeGetGenv()
+    if type(getgenv) ~= "function" then
+        return nil
+    end
+    local ok, env = pcall(getgenv)
+    if ok and type(env) == "table" then
+        return env
+    end
+    return nil
+end
+
+local sharedEnv = safeGetGenv()
+local forceReload = sharedEnv and sharedEnv.ATG_ForceReloadLang == true
+
+local function resolveExistingInstance()
+    local candidates = {}
+
+    if sharedEnv and type(sharedEnv.ATG_Lang) == "table" then
+        table.insert(candidates, sharedEnv.ATG_Lang)
+    end
+    if type(_G) == "table" and type(_G.ATG_Lang) == "table" then
+        table.insert(candidates, _G.ATG_Lang)
+    end
+
+    for _, candidate in ipairs(candidates) do
+        if type(candidate) == "table" and candidate.__ATG_LANGUAGE_SYSTEM_VERSION == LANGUAGE_SYSTEM_VERSION then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+local existingInstance = resolveExistingInstance()
+if existingInstance and not forceReload then
+    return existingInstance
+end
+
+if sharedEnv then
+    sharedEnv.ATG_ForceReloadLang = nil
+end
+
 local LanguageSystem = {}
 LanguageSystem.__index = LanguageSystem
+LanguageSystem.VERSION = LANGUAGE_SYSTEM_VERSION
 
 -- ============================================================
 -- CONFIGURATION & STATE
@@ -702,14 +747,15 @@ end
 -- GLOBAL SINGLETON
 -- ============================================================
 local instance = setmetatable({}, LanguageSystem)
+instance.__ATG_LANGUAGE_SYSTEM_VERSION = LANGUAGE_SYSTEM_VERSION
+instance.__ATG_LANGUAGE_SYSTEM = true
 instance:Initialize()
 
-if getgenv and type(getgenv) == "function" then
-    local env = getgenv()
-    if env then
-        env.ATG_Lang = instance
-    end
+if sharedEnv then
+    sharedEnv.ATG_Lang = instance
 end
-_G.ATG_Lang = instance
+if type(_G) == "table" then
+    _G.ATG_Lang = instance
+end
 
 return instance
