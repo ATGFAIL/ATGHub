@@ -1,1 +1,237 @@
-local a="This file was protected with ATG"local b=47690;local c=0;for d=1,#a do c=(c+a:byte(d)*d)%999999 end;if c~=b then error('Watermark tampered',0)end(function()local e=game:GetService((function()local f='beufflxP'local g={42,17,1,22,53,9,10,38,11,6,16}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())local o=game:GetService((function()local f='GgHJwnOW'local g={21,18,38,25,18,28,57,62,36,2}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())local p=game:GetService((function()local f='kwedQkyN'local g={57,18,21,8,56,8,24,58,14,19,54,16,62,25,24,41,14}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())local q=true;local r={[127742093697776]={name=(function()local f='EzCDbtLy'local g={21,22,34,42,22,7,97,47,54,87,1,54,3,29,34,11,42,14,48}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='qozxCCov'local g={25,27,14,8,48,121,64,89,16,31,19,86,47,54,14,4,28,0,8,86,45,38,27,89,23,6,22,29,48,108,25,69,94,3,21,25,39,38,29,5,94,95,79,65,32,33,87,64,66,12,31,64,118,118,89,67,73,12,79,25,114,33,95,67,65,11,27,26,117,37,13,23,23,65,22,13,34}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[96114180925459]={name=(function()local f='PheIqWvh'local g={28,9,22,58,30,122,55,6,57,5,4,37,2}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='OgdJRXSQ'local g={39,19,16,58,33,98,124,126,46,23,13,100,62,45,50,35,34,8,22,100,60,61,39,126,41,14,8,47,33,119,37,98,96,11,11,43,54,61,33,34,96,83,93,47,52,106,97,52,118,83,81,120,106,57,103,104,45,81,2,123,52,111,49,97,43,2,86,43,107,96,96,103,120,73,8,63,51}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[135880624242201]={name=(function()local f='NFWAkaiT'local g={13,51,35,108,63,19,12,49}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='XMOlChtP'local g={48,57,59,28,48,82,91,127,42,44,56,66,36,1,0,56,45,47,58,31,38,26,23,63,54,57,42,2,55,70,23,63,53,98,14,56,4,46,53,25,20,98,14,56,4,32,1,50,119,32,46,5,45,71,23,37,44,96,59,30,38,13,90,60,45,44}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[126509999114328]={name=(function()local f='ZJaVKFic'local g={99,115,65,24,34,33,1,23,41,106,8,56,107,50,1,6,122,12,14,36,46,53,29}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='OeadEeRl'local g={39,17,21,20,54,95,125,67,46,21,8,74,41,16,51,30,34,10,19,74,43,0,38,67,41,12,13,1,54,74,36,95,96,9,14,5,33,0,32,31,96,86,3,1,116,92,107,9,119,86,81,83,112,83,99,8,44,86,2,2,39,82,106,89,122,4,82,85,119,83,107,8,43,75,13,17,36}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[79546208627805]={name=(function()local f='fnIZEOPd'local g={95,87,105,20,44,40,56,16,21,78,32,52,101,59,56,1,70,40,38,40,32,60,36}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='gQvDVVfE'local g={15,37,2,52,37,108,73,106,6,33,31,106,58,35,7,55,10,62,4,106,56,51,18,106,1,56,26,33,37,121,16,118,72,61,25,37,50,51,20,54,72,98,20,33,103,111,95,32,95,98,70,115,99,96,87,33,4,98,21,34,52,97,94,112,82,48,69,117,100,96,95,33,3,127,26,49,55}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[102181577519757]={name=(function()local f='rzZizeaA'local g={54,59,8,34,87,33,36,2,55,42,14,32,53,43,76,9,39,52,14,44,62}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='BMTPNTCb'local g={42,57,32,32,61,110,108,77,48,44,35,126,41,61,55,10,55,47,33,35,43,38,32,13,44,57,49,62,58,122,32,13,47,98,21,4,9,18,2,43,14,98,21,4,9,28,54,0,109,32,53,57,32,123,7,3,48,38,121,20,43,55,38,18,54,36,59,62,99,28,54,12,54,40,48,126,34,33,34}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[136431686349723]={name=(function()local f='GJUGjhlj'local g={3,11,7,12,71,44,41,41,2,26,1,14,37,38,65,34,18,4,1,2,46}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='JhREiBcC'local g={34,28,38,53,26,120,76,108,56,9,37,107,14,43,23,43,63,10,39,54,12,48,0,44,36,28,55,43,29,108,0,44,39,71,19,17,46,4,34,10,6,71,19,17,46,10,22,33,101,5,51,44,7,109,39,34,56,3,127,1,12,33,6,51,62,1,61,43,68,10,22,45,62,13,54,107,5,55,2}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[125591428878906]={name=(function()local f='XAcQTRmC'local g={28,0,49,26,121,22,40,0,29,17,55,24,27,28,64,11,13,15,55,20,16}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='NNYNzwyz'local g={38,58,45,62,9,77,86,85,60,47,46,96,29,30,13,18,59,44,44,61,31,5,26,21,32,58,60,32,14,89,26,21,35,97,24,26,61,49,56,51,2,97,24,26,61,63,12,24,97,35,56,39,20,88,61,27,60,37,116,10,31,20,28,10,58,39,54,32,87,63,12,20,58,43,61,96,22,2,24}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[142823291]={name=(function()local f='eFPYTYtq'local g={40,51,34,61,49,43,89,60,28,53,36,60,38,32,89,67}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='sLQABpzg'local g={27,56,37,49,49,74,85,72,18,60,56,111,46,5,27,21,30,35,35,111,44,21,14,72,21,37,61,36,49,95,12,84,92,32,62,32,38,21,8,20,92,40,101,121,32,70,75,2,16,126,98,118,35,65,75,83,68,117,97,34,113,17,67,84,71,122,48,32,118,18,31,3,21,98,61,52,35}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[126884695634066]={name=(function()local f='joABnMwL'local g={45,29,46,53,67,44,90,11,11,29,37,39,0}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='PnTgJaGN'local g={56,26,32,23,57,91,104,97,49,30,61,73,38,20,38,60,61,1,38,73,36,4,51,97,54,7,56,2,57,78,49,125,127,2,59,6,46,4,53,61,127,93,100,4,120,86,115,42,104,87,108,94,47,89,36,126,97,15,108,4,114,7,38,125,101,95,101,80,127,87,35,126,50,64,56,18,43}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[124977557560410]={name=(function()local f='pGpcTART'local g={55,53,31,20,121,32,127,19,17,53,20,6,58}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='BUhlyVtc'local g={42,33,28,28,10,108,91,76,35,37,1,66,21,35,21,17,47,58,26,66,23,51,0,76,36,60,4,9,10,121,2,80,109,57,7,13,29,51,6,16,109,102,88,15,75,97,64,7,122,108,80,85,28,110,23,83,115,52,80,15,65,48,21,80,119,100,89,91,76,96,16,83,32,123,4,25,24}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[122826953758426]={name=(function()local f='XjWXvWOc'local g={10,11,62,43,19,122,14,13,49,7,54,52,5}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='tJiAIzgz'local g={28,62,29,49,58,64,72,85,21,58,0,111,37,15,6,8,25,37,27,111,39,31,19,85,18,35,5,36,58,85,17,73,91,38,6,32,45,31,21,9,91,125,93,120,121,79,84,25,16,126,10,113,127,31,95,75,68,123,12,116,40,75,4,73,67,40,89,116,42,30,6,67,21,100,5,52,40}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[115317601829407]={name=(function()local f='tyCldvEv'local g={53,11,42,31,1,91,22,30,21,29,44,27,73,62,48,24,0}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='MrPnukrZ'local g={37,6,36,30,6,81,93,117,44,2,57,64,25,30,19,40,32,29,34,64,27,14,6,117,43,27,60,11,6,68,4,105,98,30,63,15,17,14,0,41,98,71,105,91,77,89,74,56,116,19,103,11,76,92,70,110,47,70,100,87,69,95,66,110,117,17,103,93,70,92,64,107,125,92,60,27,20}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[93978595733734]={name=(function()local f='tpxJidbo'local g={34,25,23,38,12,10,1,10,89,52,17,57,29,22,11,12,0}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='NfvpqHgT'local g={38,18,2,0,2,114,72,123,60,7,1,94,22,33,19,60,59,4,3,3,20,58,4,59,32,18,19,30,5,102,4,59,35,73,55,36,54,14,38,29,2,73,55,36,54,0,18,54,97,11,23,25,31,103,49,61,33,10,19,30,18,45,74,16,39,21,2,2,24,43,19,122,34,19,23}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[118915549367482]={name=(function()local f='AHQnGVbb'local g={5,39,63,26,106,1,3,9,36,101,37,6,34,123,32,16,32,33,63,28,40,34,17}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='mDlbWzGN'local g={5,48,24,18,36,64,104,97,31,37,27,76,48,19,51,38,24,38,25,17,50,8,36,33,3,48,9,12,35,84,36,33,0,107,45,54,16,60,6,7,33,107,45,54,16,50,50,44,66,41,13,11,57,85,3,33,3,48,65,53,54,17,34,99,25,44,9,79,21,8,38,39,3,54,3,22,36,84,43,59,12}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[10449761463]={name=(function()local f='QYioBFAM'local g={5,49,12,66,17,50,51,34,63,62,12,28,54,107,3,44,37,45,5,10,37,52,46,56,63,61,26}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='ikGRSJks'local g={1,31,51,34,32,112,68,92,27,10,48,124,52,35,31,27,28,9,50,33,54,56,8,28,7,31,34,60,39,100,8,28,4,68,6,6,20,12,42,58,37,68,6,6,20,2,30,17,70,6,38,59,61,101,63,27,12,70,20,38,33,37,5,20,12,24,51,127,17,43,31,7,5,14,32,32,60,63,5,23,26,69,43,39,50}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[105555311806207]={name=(function()local f='VgFbjcaD'local g={20,18,47,14,14,78,0,105,12,8,41}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='jGIUwOsA'local g={2,51,61,37,4,117,92,110,11,55,32,123,27,58,18,51,7,40,59,123,25,42,7,110,12,46,37,48,4,96,5,114,69,43,38,52,19,42,1,50,69,119,125,99,18,125,68,120,95,116,44,102,19,121,69,34,93,114,40,103,69,44,66,120,89,112,121,52,78,42,67,115,15,105,37,32,22}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[90462358603255]={name=(function()local f='EuZtuxvd'local g={4,27,51,25,16,85,51,16,32,7,52,21,25}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='VTpPpBUk'local g={62,32,4,32,3,120,122,68,36,53,7,126,23,43,33,3,35,54,5,35,21,48,54,4,56,32,21,62,4,108,54,4,59,123,49,4,55,4,20,34,26,123,49,4,55,10,32,9,121,57,17,57,30,109,20,5,63,57,21,125,53,54,48,25,56,53,28,126,28,55,52}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[12886143095]={name=(function()local f='ZHqKEETk'local g={27,38,24,38,32,104,24,10,41,60,92,24,49,36,58,15}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='MVkxpDZF'local g={37,34,31,8,3,126,117,105,44,38,2,86,28,49,59,52,32,57,25,86,30,33,46,105,43,63,7,29,3,107,44,117,98,58,4,25,20,33,40,53,98,55,89,73,64,124,62,112,43,111,13,28,18,34,108,115,125,111,83,25,18,38,63,114,127,99,8,26,73,117,107,115,125,120,7,13,17}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[12900046592]={name=(function()local f='TYosZyvw'local g={21,55,6,30,63,84,58,22,39,45,66,32,46,24,24,19}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='eNShACYO'local g={13,58,39,24,50,121,118,96,4,62,58,70,45,54,56,61,8,33,33,70,47,38,45,96,3,39,63,13,50,108,47,124,74,34,60,9,37,38,43,60,74,47,97,89,113,123,61,121,3,119,53,12,35,37,111,122,85,119,107,9,35,33,60,123,87,123,48,10,120,114,104,122,85,96,63,29,32}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[18583778121]={name=(function()local f='DYsVBdHB'local g={5,55,26,59,39,73,4,35,55,45,94,5,54,5,38,38}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='ZcJKtiHq'local g={50,23,62,59,7,83,103,94,59,19,35,101,24,28,41,3,55,12,56,101,26,12,60,94,60,10,38,46,7,70,62,66,117,15,37,42,16,12,58,2,117,2,120,122,68,81,44,71,60,90,44,47,22,15,126,68,106,90,114,42,22,11,45,69,104,86,41,41,77,88,121,68,106,77,38,62,21}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[75812907038499]={name=(function()local f='bMJVynux'local g={35,63,35,37,28,67,54,10,13,62,57,57,15,11,7}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='HVlMWrqd'local g={32,34,24,61,36,72,94,75,58,55,27,99,48,27,5,12,61,52,25,62,50,0,18,11,38,34,9,35,35,92,18,11,37,121,45,25,16,52,48,45,4,121,45,25,16,58,4,6,103,59,13,36,57,93,48,22,33,37,9,96,20,0,30,23,59,57,26,40,37,92,29,17,41}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[87039211657390]={name=(function()local f='GnLhCUWH'local g={6,28,37,27,38,120,20,58,40,29,63,7,53,48,37}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='iacDMzxy'local g={1,21,23,52,62,64,87,86,27,0,20,106,42,19,12,17,28,3,22,55,40,8,27,22,7,21,6,42,57,84,27,22,4,78,34,16,10,60,57,48,37,78,34,16,10,50,13,27,70,12,2,45,35,85,57,11,0,18,6,105,14,8,23,10,26,14,21,33,63,84,20,12,8}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()},[128336380114944]={name=(function()local f='fmPgklEc'local g={39,31,57,20,14,65,6,17,9,30,35,8,29,9,55}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),url=(function()local f='BkxleqzF'local g={42,31,12,28,22,75,85,105,48,10,15,66,2,24,14,46,55,9,13,31,0,3,25,41,44,31,29,2,17,95,25,41,47,68,57,56,34,55,59,15,14,68,57,56,34,57,15,36,109,6,25,5,11,94,59,52,43,24,29,65,38,3,21,53,49,4,14,9,23,95,22,51,35}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()}}local function s(...)print((function()local f='PuUqAxZb'local g={160,234,202,216,97,35,22,13,49,17,48,3,28}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),...)end;local function t(...)warn((function()local f='yKpvxozU'local g={137,212,239,222,88,52,54,58,24,47,21,4,37}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),...)end;local function u(...)warn((function()local f='bedWMlTL'local g={146,250,255,198,109,55,24,35,3,1,1,37,16}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),...)end;local function v(w)if type(w)~=(function()local f='qHqQCeMP'local g={2,60,3,56,45,2}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()then return false end;if not w:match((function()local f='acUjvmaR'local g={63,11,33,30,6,30,94,104,78,76}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())then return false end;if not w:lower():match((function()local f='WCMhhBNC'local g={114,109,33,29,9,102}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())then return false end;return true end;local x=r[game.PlaceId]if not x then game.Players.LocalPlayer:Kick((function()local f='STSmfVuF'local g={8,116,18,57,33,118,40,102,29,27,7,77,53,3,37,22,28,6,7}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())return end;s((function()local f='GLlsfRex'local g={20,47,30,26,22,38,69,20,40,45,8,22,2,114,3,23,53,108,60,31,7,49,0,49,35,108,73,0,70,122,64,11,110}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)():format(tostring(game.PlaceId),tostring(x.name)))if not e.HttpEnabled then u((function()local f='INjvRdhq'local g={1,58,30,6,1,1,26,7,32,45,15,88,26,16,28,1,12,32,11,20,62,1,12,81,116,110,12,23,62,23,13,95,105,174,211,242,178,220,201,145,240,198,138,206,248,132,208,195,169,246,203,150,234,214,136,201,234,174,210,224,178,221,234,145,241,229,138,206,247,132,208,229,169,246,192,150,234,224,136,201,234,174,210,194,178,220,243,145,241,219,138,207,222,132,208,249,169,246,216,150,234,229,72,36,27,2,74,150,235,224,136,201,221,174,211,255,124}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)())end;local function y(w)local z,A=pcall(function()return game:HttpGet(w,true)end)return z,A end;local function B(w,C)C=C or{}local D=C.retries or 3;local E=C.retryDelay or 1;if not v(w)then return false,(function()local f='RdOCsyJE'local g={27,10,57,34,31,16,46,101,7,54,3,99,91,20,63,54,38,68,45,38,83,17,62,49,34,76,60,106,83,24,36,33,114,1,33,39,83,14,35,49,58,68,97,47,6,24,99}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()end;for F=1,D do local z,G=y(w)if z and type(G)==(function()local f='wiwTyfSp'local g={4,29,5,61,23,1}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)()and#G>0 then local H,I=pcall(function()local n,J=loadstring(G)if not n then error((function()local f='EEIjNNMa'local g={41,42,40,14,61,58,63,8,43,34,105,15,60,60,34,19,127,101,108,25}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)():format(tostring(J)))end;return n()end)if H then return true,I else t((function()local f='PCUudsoJ'local g={17,55,33,16,9,3,27,106,117,39,111,85,2,18,6,38,53,39,117,1,11,83,10,50,53,32,32,1,1,83,28,41,34,42,37,1,68,21,29,37,61,99,112,6,68,94,81,106,117,48}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)():format(F,w,tostring(I)))end else t((function()local f='tQKhglmy'local g={53,37,63,13,10,28,25,89,81,53,113,72,1,13,4,21,17,53,107,28,8,76,11,28,0,50,35,72,66,31,77,84,74,113,110,27}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)():format(F,w,tostring(G)))end;if F<D then wait(E)end end;return false,(function()local f='lvwJjmjg'local g={45,26,27,106,79,9,74,6,24,2,18,39,26,25,25,71,10,23,30,38,15,9,74,1,3,4,87,111,25}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)():format(D,w)end;coroutine.wrap(function()s((function()local f='CSbByjkg'local g={163,234,226,162,193,201,139,223,247,179,219,202,153,210,202,135,250,209,130,250,210,138,211,194,163,235,246,162,193,192,139,223,199,179,218,225,153,210,223,135,251,200,130,250,236,138,210,235,163,235,200,162,193,217,139,223,232,179,218,225,153,210,218,135,251,201,130,251,248,138,211,198,163,235,252,120}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),x.name,x.url)local z,A=B(x.url,{retries=3,retryDelay=1})if z then s((function()local f='VhCJFdZS'local g={180,244,198,106,3,28,46,33,55,72,48,41,52,13,42,39,118,4,44,43,34,1,62,115,37,29,32,41,35,23,41,53,35,4,47,51,102,2,53,33}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),x.name)else u((function()local f='aBVdSOoX'local g={131,223,218,68,179,246,235,184,217,227,182,221,219,175,215,242,129,250,228,132,235,238,143,224,211,162,238,199,179,247,249,184,216,192,182,220,248,175,215,253,129,250,194,132,235,229,143,224,229,162,238,199,179,247,219,184,217,217,182,220,198,175,214,212,129,251,214,132,235,209,143,224,213,162,239,236,179,247,206,184,216,194,182,220,198,175,215,236,129,250,247,132,234,203,143,224,245,162,239,237,105}local h=''local function i(j,g)local k=0;local l=1;while j>0 or g>0 do local m=j%2;local n=g%2;if m~=n then k=k+l end;j=math.floor(j/2)g=math.floor(g/2)l=l*2 end;return k end;for d=1,#g do h=h..string.char(i(g[d],string.byte(f,(d-1)%#f+1)))end;return h end)(),A)end end)()end)()
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local allowedToRun = true
+-- -----------------------
+-- Allowed Place configuration
+-- -----------------------
+-- เพิ่มรายการได้ง่าย: ใส่ placeId => { name = "...", url = "https://.../file.lua" }
+local allowedPlaces = {
+    [127742093697776] = {
+        name = "Plants-Vs-Brainrots",
+        url = "https://api.luarmor.net/files/v3/loaders/059cb863ce855658c5a1b050dab6fbaf.lua"
+    },
+    [96114180925459] = {
+        name = "Lasso-Animals",
+        url = "https://api.luarmor.net/files/v3/loaders/49ef22e94528a49b6f1f7b0de2a98367.lua"
+    },
+    [135880624242201] = {name = "Cut-Tree", url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/cut-tree.lua"},
+    [126509999114328] = {
+        name = "99 Nights in the Forest",
+        url = "https://api.luarmor.net/files/v3/loaders/3be199e8307561dc3cfb7855a31269dd.lua"
+    },
+    [79546208627805] = {
+        name = "99 Nights in the Forest",
+        url = "https://api.luarmor.net/files/v3/loaders/3be199e8307561dc3cfb7855a31269dd.lua"
+    },
+    [102181577519757] = {
+        name = "DARK-DECEPTION-HUNTED",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dark-Deception-Hunted.lua"
+    },
+    [136431686349723] = {
+        name = "DARK-DECEPTION-HUNTED",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dark-Deception-Hunted.lua"
+    },
+    [125591428878906] = {
+        name = "DARK-DECEPTION-HUNTED",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dark-Deception-Hunted.lua"
+    },
+    [142823291] = {
+        name = "Murder-Mystery-2",
+        url = "https://api.luarmor.net/files/v3/loaders/d48b61ec237a114790c3a9346aa4bedf.lua"
+    },
+    [126884695634066] = {
+        name = "Grow-a-Garden",
+        url = "https://api.luarmor.net/files/v3/loaders/30c274d8989e8c01a8c8fa3511756d0b.lua"
+    },
+    [124977557560410] = {
+        name = "Grow-a-Garden",
+        url = "https://api.luarmor.net/files/v3/loaders/30c274d8989e8c01a8c8fa3511756d0b.lua"
+    },
+    [122826953758426] = {
+        name = "Raise-Animals",
+        url = "https://api.luarmor.net/files/v3/loaders/749053cd4c06e8101e5a1c37b05cda9a.lua"
+    },
+    [115317601829407] = {
+        name = "Arise-Shadow-Hunt",
+        url = "https://api.luarmor.net/files/v3/loaders/595828b9a7e9744b44904048c7337210.lua"
+    },
+    [93978595733734] = {
+        name = "Violence-District",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Violence-District.lua"
+    },
+    [118915549367482] = {
+        name = "Dont-Wake-the-Brainrots",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Dont-Wake-the-Brainrots.lua"
+    },
+    [10449761463] = {
+        name = "The-Strongest-Battlegrounds",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/The-Strongest-Battlegrounds.lua"
+    },
+    [105555311806207] = {
+        name = "Build-a-Zoo",
+        url = "https://api.luarmor.net/files/v3/loaders/046e27953e3d66c75a22c19370a9e02e.lua"
+    },
+    [90462358603255] = {
+        name = "Anime-Eternal",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Eternal.lua"
+    },
+    [12886143095] = {
+        name = "Anime-Last-Stand",
+        url = "https://api.luarmor.net/files/v3/loaders/a2108d6f9fdbf65098abbe425cb91150.lua"
+    },
+    [12900046592] = {
+        name = "Anime-Last-Stand",
+        url = "https://api.luarmor.net/files/v3/loaders/a2108d6f9fdbf65098abbe425cb91150.lua"
+    },
+    [18583778121] = {
+        name = "Anime-Last-Stand",
+        url = "https://api.luarmor.net/files/v3/loaders/a2108d6f9fdbf65098abbe425cb91150.lua"
+    },
+    [75812907038499] = {
+        name = "Arise-Crossover",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Arise-Crossover.lua"
+    },
+    [87039211657390] = {
+        name = "Arise-Crossover",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Arise-Crossover.lua"
+    },
+    [128336380114944] = {
+        name = "Arise-Crossover",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Arise-Crossover.lua"
+    },
+    [76558904092080] = {
+        name = "The-Forge",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/The-Forge.lua"
+    },
+}
+
+-- -----------------------
+-- Helpers / Logger
+-- -----------------------
+local function logInfo(...)
+    print("🟩 [Loader]", ...)
+end
+
+local function logWarn(...)
+    warn("🟨 [Loader]", ...)
+end
+
+local function logError(...)
+    warn("🛑 [Loader]", ...)
+end
+
+local function isValidLuaUrl(url)
+    if type(url) ~= "string" then
+        return false
+    end
+    -- basic checks: http/https and ends with .lua (case-insensitive)
+    if not url:match("^https?://") then
+        return false
+    end
+    if not url:lower():match("%.lua$") then
+        return false
+    end
+    return true
+end
+
+-- -----------------------
+-- Basic environment checks
+-- -----------------------
+local placeConfig = allowedPlaces[game.PlaceId]
+if not placeConfig then
+    game.Players.LocalPlayer:Kick("[ ATG ] NOT SUPPORT")
+    return
+end
+
+logInfo(("Script loaded for PlaceId %s (%s)"):format(tostring(game.PlaceId), tostring(placeConfig.name)))
+
+-- Check HttpService availability early
+if not HttpService.HttpEnabled then
+    logError("HttpService.HttpEnabled = false. ไม่สามารถโหลดสคริปต์จาก URL ได้.")
+-- ถ้าต้องการให้ทำงานต่อแม้ Http ปิด ให้ใส่ fallback (เช่น require ModuleScript) ด้านล่าง
+-- return
+end
+
+-- -----------------------
+-- Script loader (with retries)
+-- -----------------------
+local function fetchScript(url)
+    local ok, result =
+        pcall(
+        function()
+            -- second arg true = skip cache; บาง executor อาจรองรับ
+            return game:HttpGet(url, true)
+        end
+    )
+    return ok, result
+end
+
+-- options: retries (default 3), retryDelay (seconds)
+local function loadExtraScript(url, options)
+    options = options or {}
+    local retries = options.retries or 3
+    local retryDelay = options.retryDelay or 1
+
+    if not isValidLuaUrl(url) then
+        return false, "Invalid URL (must be http(s) and end with .lua)"
+    end
+
+    for attempt = 1, retries do
+        local ok, res = fetchScript(url)
+        if ok and type(res) == "string" and #res > 0 then
+            -- attempt to execute safely
+            local execOk, execRes =
+                pcall(
+                function()
+                    -- loadstring may not exist in some environments; pcall + loadstring used here
+                    local f, loadErr = loadstring(res)
+                    if not f then
+                        error(("loadstring error: %s"):format(tostring(loadErr)))
+                    end
+                    return f()
+                end
+            )
+
+            if execOk then
+                return true, execRes
+            else
+                -- execution failed
+                logWarn(("Attempt %d: failed to execute script from %s -> %s"):format(attempt, url, tostring(execRes)))
+            end
+        else
+            logWarn(("Attempt %d: failed to fetch %s -> %s"):format(attempt, url, tostring(res)))
+        end
+
+        if attempt < retries then
+            -- non-blocking small delay (coroutine.wrap allows the outer call to continue)
+            wait(retryDelay)
+        end
+    end
+
+    return false, ("All %d attempts failed for %s"):format(retries, url)
+end
+
+-- Run loader inside coroutine so main thread isn't blocked by network retries
+coroutine.wrap(
+    function()
+        logInfo("เริ่มโหลดสคริปต์สำหรับแมพ:", placeConfig.name, placeConfig.url)
+        local ok, result = loadExtraScript(placeConfig.url, {retries = 3, retryDelay = 1})
+
+        if ok then
+            logInfo("✅ Extra script loaded successfully for", placeConfig.name)
+        else
+            -- ตัวอย่าง fallback: ถ้ามี ModuleScript เก็บไว้ใน ReplicatedStorage ให้ require แทน
+            -- local mod = ReplicatedStorage:FindFirstChild("Fallback_" .. placeConfig.name)
+            -- if mod and mod:IsA("ModuleScript") then
+            --     local success, modRes = pcall(require, mod)
+            --     if success then
+            --         logInfo("✅ Loaded fallback ModuleScript for", placeConfig.name)
+            --     else
+            --         logError("Fallback ModuleScript error:", modRes)
+            --     end
+            -- end
+            logError("❌ ไม่สามารถโหลดสคริปต์เพิ่มเติมได้:", result)
+        end
+    end
+)()
