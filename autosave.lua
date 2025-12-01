@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 local httpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 
@@ -399,7 +400,7 @@ local SaveManager = {} do
 	function SaveManager:BuildConfigSection(tab)
 		assert(self.Library, "Must set SaveManager.Library")
 
-		local section = tab:AddSection("📁 Configuration Manager")
+		local section = tab:AddSection("[ 📁 ] Configuration Manager")
 
 		-- โหลด UI settings
 		local uiSettings = self:LoadUI()
@@ -412,11 +413,10 @@ local SaveManager = {} do
 
 		-- Autoload Toggle (ใช้ไฟล์ AutoSave.json แบบคงที่)
 		local currentAutoload = self:GetAutoloadConfig()
-		local autoloadDesc = currentAutoload and ('ปัจจุบัน: "' .. currentAutoload .. '"') or 'จะโหลดไฟล์ "AutoSave.json" อัตโนมัติเมื่อเปิด'
-		
+
 		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
-			Title = "🔄 Auto Load",
-			Description = autoloadDesc,
+			Title = "Auto Load",
+			Description = "Auto Load Save",
 			Default = (uiSettings and uiSettings.autoload_enabled) or false,
 			Callback = function(value)
 				if value then
@@ -439,12 +439,9 @@ local SaveManager = {} do
 			end
 		})
 
-		-- Auto Save Toggle (บันทึกไปที่ AutoSave.json แบบคงที่)
-		local autosaveDesc = self.AutoSaveConfig and ('กำลังบันทึกอัตโนมัติไปที่: "' .. tostring(self.AutoSaveConfig) .. '"') or 'บันทึกอัตโนมัติไปที่ "AutoSave.json"'
-		
 		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
-			Title = "💾 Auto Save",
-			Description = autosaveDesc,
+			Title = "Auto Save",
+			Description = "Auto Save When You Settings",
 			Default = (uiSettings and uiSettings.autosave_enabled) or false,
 			Callback = function(value)
 				if value then
