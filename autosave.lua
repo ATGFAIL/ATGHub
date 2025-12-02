@@ -10,6 +10,7 @@ local SaveManager = {} do
 	SaveManager.AutoSaveConfig = nil
 	SaveManager.AutoSaveDebounce = false
 	SaveManager.OriginalCallbacks = {}
+	SaveManager.IsLoading = false -- เพิ่ม flag สำหรับป้องกัน callback ตอน load
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -223,6 +224,7 @@ local SaveManager = {} do
 		return nil
 	end
 
+	-- แก้ไขฟังก์ชัน Load ให้โหลดทีละตัว
 	function SaveManager:Load(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -234,11 +236,28 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
-		for _, option in next, decoded.objects do
-			if self.Parser[option.type] then
-				task.spawn(function() self.Parser[option.type].Load(option.idx, option) end)
+		-- เปิด flag IsLoading เพื่อป้องกัน auto save ระหว่างโหลด
+		self.IsLoading = true
+
+		-- โหลดทีละตัวด้วย task.wait() เล็กน้อยระหว่างแต่ละตัว
+		task.spawn(function()
+			for i, option in ipairs(decoded.objects) do
+				if self.Parser[option.type] then
+					pcall(function() 
+						self.Parser[option.type].Load(option.idx, option) 
+					end)
+				end
+				
+				-- รอเล็กน้อยระหว่างแต่ละ option (ป้องกัน stack overflow)
+				if i % 5 == 0 then -- ทุก 5 options รอครั้งนึง
+					task.wait()
+				end
 			end
-		end
+			
+			-- ปิด flag IsLoading หลังจากโหลดเสร็จ
+			task.wait(0.5) -- รอเพิ่มเล็กน้อยให้แน่ใจว่าทุกอย่างเสร็จ
+			self.IsLoading = false
+		end)
 
 		return true
 	end
@@ -333,7 +352,7 @@ local SaveManager = {} do
 		end
 	end
 
-	-- ฟังก์ชัน Auto Save
+	-- ฟังก์ชัน Auto Save (แก้ไขให้ป้องกัน stack overflow)
 	function SaveManager:EnableAutoSave(configName)
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
@@ -350,6 +369,11 @@ local SaveManager = {} do
 				-- สร้าง callback ใหม่ที่ป้องกัน stack overflow
 				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
+					-- ป้องกัน callback ตอน loading
+					if self.IsLoading then
+						return
+					end
+
 					-- ป้องกัน recursion ด้วยการใช้ flag
 					if option._isInCallback then
 						return
@@ -367,12 +391,12 @@ local SaveManager = {} do
 
 					option._isInCallback = false
 
-					-- Auto save ด้วย debounce
-					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
+					-- Auto save ด้วย debounce (เพิ่มเงื่อนไขไม่ให้เซฟตอน loading)
+					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce and not self.IsLoading then
 						self.AutoSaveDebounce = true
 						task.spawn(function()
 							task.wait(1) -- รอ 1 วินาทีก่อนเซฟ
-							if self.AutoSaveEnabled and self.AutoSaveConfig then
+							if self.AutoSaveEnabled and self.AutoSaveConfig and not self.IsLoading then
 								self:Save(self.AutoSaveConfig)
 							end
 							self.AutoSaveDebounce = false
@@ -468,9 +492,16 @@ local SaveManager = {} do
 			-- Auto Load
 			if uiSettings.autoload_enabled then
 				task.spawn(function()
+					-- รอให้ UI โหลดเสร็จก่อน
+					task.wait(1)
+					
 					-- พยายามโหลด AutoSave
 					if isfile(getConfigFilePath(self, fixedConfigName)) then
 						SaveManager:Load(fixedConfigName)
+						
+						-- รอให้โหลดเสร็จก่อนอัพเดท toggle
+						task.wait(2)
+						
 						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
 							SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
 						end
@@ -480,12 +511,17 @@ local SaveManager = {} do
 
 			-- Auto Save
 			if uiSettings.autosave_enabled then
-				if isfile(getConfigFilePath(self, fixedConfigName)) then
-					self:EnableAutoSave(fixedConfigName)
-					if SaveManager.Options and SaveManager.Options.SaveManager_AutoSaveToggle then
-						SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+				task.spawn(function()
+					-- รอให้โหลดเสร็จก่อนเปิด auto save
+					task.wait(3)
+					
+					if isfile(getConfigFilePath(self, fixedConfigName)) then
+						self:EnableAutoSave(fixedConfigName)
+						if SaveManager.Options and SaveManager.Options.SaveManager_AutoSaveToggle then
+							SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
+						end
 					end
-				end
+				end)
 			end
 		end
 	end
