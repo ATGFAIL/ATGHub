@@ -1,10 +1,5 @@
 local httpService = game:GetService("HttpService")
 
--- ═══════════════════════════════════════════════════════════════
--- Load Language System
--- ═══════════════════════════════════════════════════════════════
-local Lang = loadstring(game:HttpGet("https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Languages/LanguageSystem.lua"))()
-
 local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
     InterfaceManager.Settings = {
@@ -12,7 +7,7 @@ local InterfaceManager = {} do
         Acrylic = true,
         Transparency = true,
         MenuKeybind = "LeftControl",
-        Language = "EN" -- Added Language setting
+        Language = "en"
     }
 
     function InterfaceManager:SetFolder(folder)
@@ -57,11 +52,6 @@ local InterfaceManager = {} do
                 for i, v in next, decoded do
                     InterfaceManager.Settings[i] = v
                 end
-                
-                -- Apply loaded language
-                if InterfaceManager.Settings.Language then
-                    Lang:SetLanguage(InterfaceManager.Settings.Language)
-                end
             end
         end
     end
@@ -73,63 +63,10 @@ local InterfaceManager = {} do
 
         InterfaceManager:LoadSettings()
 
-		local section = tab:AddSection(Lang:Get("tab_settings"))
+		local section = tab:AddSection("Interface")
 
-        -- ═══════════════════════════════════════════════════════════
-        -- Language Selector
-        -- ═══════════════════════════════════════════════════════════
-        local languageNames = {}
-        local languageCodes = {}
-        local availableLanguages = Lang:GetAvailableLanguagesWithNames()
-        
-        for _, langData in ipairs(availableLanguages) do
-            table.insert(languageNames, langData.name)
-            languageCodes[langData.name] = langData.code
-        end
-
-        local currentLangName = Lang:GetCurrentLanguageName()
-        for _, langData in ipairs(availableLanguages) do
-            if langData.code == Settings.Language then
-                currentLangName = langData.name
-                break
-            end
-        end
-
-        local LanguageDropdown = section:AddDropdown("InterfaceLanguage", {
-            Title = Lang:Get("language"),
-            Description = Lang:Get("language_changed_desc"),
-            Values = languageNames,
-            Default = currentLangName,
-            Callback = function(Value)
-                local langCode = languageCodes[Value]
-                if langCode then
-                    Lang:SetLanguage(langCode)
-                    Settings.Language = langCode
-                    InterfaceManager:SaveSettings()
-                    
-                    -- Notify user
-                    Library:Notify({
-                        Title = Lang:Get("language_changed"),
-                        Content = Lang:Get("language_changed_desc"),
-                        Duration = 3
-                    })
-                    
-                    -- Reload UI after short delay
-                    task.wait(1)
-                    Library:Notify({
-                        Title = Lang:Get("notification_info"),
-                        Content = "UI will reload to apply language...",
-                        Duration = 2
-                    })
-                end
-            end
-        })
-
-        -- ═══════════════════════════════════════════════════════════
-        -- Theme Selector
-        -- ═══════════════════════════════════════════════════════════
 		local InterfaceTheme = section:AddDropdown("InterfaceTheme", {
-			Title = Lang:Get("tab_settings"),
+			Title = "Theme",
 			Description = "Changes the interface theme.",
 			Values = Library.Themes,
 			Default = Settings.Theme,
@@ -141,10 +78,27 @@ local InterfaceManager = {} do
 		})
 
         InterfaceTheme:SetValue(Settings.Theme)
-	
-        -- ═══════════════════════════════════════════════════════════
-        -- Acrylic Toggle
-        -- ═══════════════════════════════════════════════════════════
+
+		-- Language Dropdown
+		local LanguageDropdown = section:AddDropdown("InterfaceLanguage", {
+			Title = "🌐 Language",
+			Description = "Changes the interface language (Auto-Translate)",
+			Values = Library.Translation:GetLanguageOptions(),
+			Default = Library.Translation:GetLanguageIndex(),
+			Callback = function(Value)
+				local langCode = Library.Translation:GetLanguageCode(Value)
+				Library.Translation:SetLanguage(langCode)
+				Settings.Language = langCode
+				InterfaceManager:SaveSettings()
+			end
+		})
+
+		-- Load saved language
+		if Settings.Language and Settings.Language ~= "en" then
+			Library.Translation:SetLanguage(Settings.Language)
+			LanguageDropdown:SetValue(Library.Translation:GetLanguageIndex())
+		end
+
 		if Library.UseAcrylic then
 			section:AddToggle("AcrylicToggle", {
 				Title = "Acrylic",
@@ -158,9 +112,6 @@ local InterfaceManager = {} do
 			})
 		end
 	
-        -- ═══════════════════════════════════════════════════════════
-        -- Transparency Toggle
-        -- ═══════════════════════════════════════════════════════════
 		section:AddToggle("TransparentToggle", {
 			Title = "Transparency",
 			Description = "Makes the interface transparent.",
@@ -172,13 +123,7 @@ local InterfaceManager = {} do
 			end
 		})
 	
-        -- ═══════════════════════════════════════════════════════════
-        -- Menu Keybind
-        -- ═══════════════════════════════════════════════════════════
-		local MenuKeybind = section:AddKeybind("MenuKeybind", { 
-            Title = "Minimize Bind", 
-            Default = Settings.MenuKeybind 
-        })
+		local MenuKeybind = section:AddKeybind("MenuKeybind", { Title = "Minimize Bind", Default = Settings.MenuKeybind })
 		MenuKeybind:OnChanged(function()
 			Settings.MenuKeybind = MenuKeybind.Value
             InterfaceManager:SaveSettings()
