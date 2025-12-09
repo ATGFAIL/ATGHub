@@ -79,24 +79,26 @@ local InterfaceManager = {} do
 
         InterfaceTheme:SetValue(Settings.Theme)
 
-		-- Language Dropdown
-		local LanguageDropdown = section:AddDropdown("InterfaceLanguage", {
-			Title = "🌐 Language",
-			Description = "Changes the interface language (Auto-Translate)",
-			Values = Library.Translation:GetLanguageOptions(),
-			Default = Library.Translation:GetLanguageIndex(),
-			Callback = function(Value)
-				local langCode = Library.Translation:GetLanguageCode(Value)
-				Library.Translation:SetLanguage(langCode)
-				Settings.Language = langCode
-				InterfaceManager:SaveSettings()
-			end
-		})
+		-- Language Dropdown (only if Translation System exists)
+		if Library.Translation then
+			local LanguageDropdown = section:AddDropdown("InterfaceLanguage", {
+				Title = "🌐 Language",
+				Description = "Changes the interface language (Auto-Translate)",
+				Values = Library.Translation:GetLanguageOptions(),
+				Default = Library.Translation:GetLanguageIndex(),
+				Callback = function(Value)
+					local langCode = Library.Translation:GetLanguageCode(Value)
+					Library.Translation:SetLanguage(langCode)
+					Settings.Language = langCode
+					InterfaceManager:SaveSettings()
+				end
+			})
 
-		-- Load saved language
-		if Settings.Language and Settings.Language ~= "en" then
-			Library.Translation:SetLanguage(Settings.Language)
-			LanguageDropdown:SetValue(Library.Translation:GetLanguageIndex())
+			-- Load saved language
+			if Settings.Language and Settings.Language ~= "en" then
+				Library.Translation:SetLanguage(Settings.Language)
+				LanguageDropdown:SetValue(Library.Translation:GetLanguageIndex())
+			end
 		end
 
 		if Library.UseAcrylic then
