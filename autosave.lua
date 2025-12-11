@@ -1,5 +1,6 @@
 ---@diagnostic disable: undefined-global
 local httpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local SaveManager = {} do
 	SaveManager.FolderRoot = "ATGSettings"
@@ -9,15 +10,9 @@ local SaveManager = {} do
 	SaveManager.AutoSaveConfig = nil
 	SaveManager.AutoSaveDebounce = false
 	SaveManager.OriginalCallbacks = {}
-	SaveManager.DefaultValues = {}
-	SaveManager._hookedTabs = {}
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
-				local defaultValue = SaveManager.DefaultValues[idx]
-				if defaultValue ~= nil and defaultValue == object.Value then
-					return nil
-				end
 				return { type = "Toggle", idx = idx, value = object.Value } 
 			end,
 			Load = function(idx, data)
@@ -28,47 +23,16 @@ local SaveManager = {} do
 		},
 		Slider = {
 			Save = function(idx, object)
-				local defaultValue = SaveManager.DefaultValues[idx]
-				if defaultValue ~= nil and tonumber(defaultValue) == tonumber(object.Value) then
-					return nil
-				end
 				return { type = "Slider", idx = idx, value = tostring(object.Value) }
 			end,
 			Load = function(idx, data)
 				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValue(tonumber(data.value))
+					SaveManager.Options[idx]:SetValue(data.value)
 				end
 			end,
 		},
 		Dropdown = {
 			Save = function(idx, object)
-				local defaultValue = SaveManager.DefaultValues[idx]
-				
-				if object.Multi then
-					if defaultValue ~= nil then
-						local isDefault = true
-						for k, v in pairs(object.Value) do
-							if defaultValue[k] ~= v then
-								isDefault = false
-								break
-							end
-						end
-						if isDefault then
-							for k, v in pairs(defaultValue) do
-								if object.Value[k] ~= v then
-									isDefault = false
-									break
-								end
-							end
-						end
-						if isDefault then return nil end
-					end
-				else
-					if defaultValue ~= nil and defaultValue == object.Value then
-						return nil
-					end
-				end
-				
 				return { type = "Dropdown", idx = idx, value = object.Value, multi = object.Multi }
 			end,
 			Load = function(idx, data)
@@ -79,20 +43,7 @@ local SaveManager = {} do
 		},
 		Colorpicker = {
 			Save = function(idx, object)
-				local hexValue = object.Value:ToHex()
-				local defaultValue = SaveManager.DefaultValues[idx]
-				local defaultTransparency = SaveManager.DefaultValues[idx .. "_transparency"]
-				
-				if defaultValue ~= nil then
-					local defaultHex = defaultValue:ToHex()
-					local currentTransparency = object.Transparency or 0
-					local defTrans = defaultTransparency or 0
-					
-					if defaultHex == hexValue and currentTransparency == defTrans then
-						return nil
-					end
-				end
-				return { type = "Colorpicker", idx = idx, value = hexValue, transparency = object.Transparency or 0 }
+				return { type = "Colorpicker", idx = idx, value = object.Value:ToHex(), transparency = object.Transparency }
 			end,
 			Load = function(idx, data)
 				if SaveManager.Options[idx] then 
@@ -102,11 +53,6 @@ local SaveManager = {} do
 		},
 		Keybind = {
 			Save = function(idx, object)
-				local defaultValue = SaveManager.DefaultValues[idx]
-				local defaultMode = SaveManager.DefaultValues[idx .. "_mode"]
-				if defaultValue ~= nil and defaultValue == object.Value and defaultMode == object.Mode then
-					return nil
-				end
 				return { type = "Keybind", idx = idx, mode = object.Mode, key = object.Value }
 			end,
 			Load = function(idx, data)
@@ -115,12 +61,9 @@ local SaveManager = {} do
 				end
 			end,
 		},
+
 		Input = {
 			Save = function(idx, object)
-				local defaultValue = SaveManager.DefaultValues[idx]
-				if defaultValue ~= nil and defaultValue == object.Value then
-					return nil
-				end
 				return { type = "Input", idx = idx, text = object.Value }
 			end,
 			Load = function(idx, data)
@@ -131,6 +74,7 @@ local SaveManager = {} do
 		},
 	}
 
+	-- helpers
 	local function sanitizeFilename(name)
 		name = tostring(name or "")
 		name = name:gsub("%s+", "_")
@@ -146,24 +90,67 @@ local SaveManager = {} do
 	end
 
 	local function ensureFolder(path)
-		if not isfolder(path) then makefolder(path) end
+		if not isfolder(path) then
+			makefolder(path)
+		end
 	end
 
 	local function getConfigsFolder(self)
-		return self.FolderRoot .. "/" .. getPlaceId()
+		local root = self.FolderRoot
+		local placeId = getPlaceId()
+		return root .. "/" .. placeId
 	end
 
 	local function getConfigFilePath(self, name)
-		return getConfigsFolder(self) .. "/" .. name .. ".json"
+		local folder = getConfigsFolder(self)
+		return folder .. "/" .. name .. ".json"
 	end
 
+	-- ไฟล์สำหรับเซฟ UI ของ SaveManager เอง
 	local function getSaveManagerUIPath(self)
-		return getConfigsFolder(self) .. "/savemanager_ui.json"
+		local folder = getConfigsFolder(self)
+		return folder .. "/savemanager_ui.json"
 	end
 
 	function SaveManager:BuildFolderTree()
-		ensureFolder(self.FolderRoot)
-		ensureFolder(getConfigsFolder(self))
+		local root = self.FolderRoot
+		ensureFolder(root)
+
+		local placeId = getPlaceId()
+		local placeFolder = root .. "/" .. placeId
+		ensureFolder(placeFolder)
+
+		-- Migrate legacy configs (ทำในพื้นหลังเพื่อไม่ให้ค้าง)
+		task.spawn(function()
+			local legacySettingsFolder = root .. "/settings"
+			if isfolder(legacySettingsFolder) then
+				local files = listfiles(legacySettingsFolder)
+				for i = 1, #files do
+					local f = files[i]
+					if f:sub(-5) == ".json" then
+						local base = f:match("([^/\\]+)%.json$")
+						if base and base ~= "options" then
+							local dest = placeFolder .. "/" .. base .. ".json"
+							if not isfile(dest) then
+								local ok, data = pcall(readfile, f)
+								if ok and data then
+									pcall(writefile, dest, data)
+								end
+							end
+						end
+					end
+				end
+
+				local autopath = legacySettingsFolder .. "/autoload.txt"
+				if isfile(autopath) then
+					local autodata = readfile(autopath)
+					local destAuto = placeFolder .. "/autoload.txt"
+					if not isfile(destAuto) then
+						pcall(writefile, destAuto, autodata)
+					end
+				end
+			end
+		end)
 	end
 
 	function SaveManager:SetIgnoreIndexes(list)
@@ -177,103 +164,29 @@ local SaveManager = {} do
 		self:BuildFolderTree()
 	end
 
-	-- Hook ตัว Tab เพื่อดักจับการสร้าง Element
-	function SaveManager:HookTab(tab)
-		if self._hookedTabs[tab] then return end
-		self._hookedTabs[tab] = true
-
-		local methods = {
-			{name = "AddToggle", type = "Toggle"},
-			{name = "AddSlider", type = "Slider"},
-			{name = "AddDropdown", type = "Dropdown"},
-			{name = "AddColorpicker", type = "Colorpicker"},
-			{name = "AddKeybind", type = "Keybind"},
-			{name = "AddInput", type = "Input"},
-		}
-
-		for _, method in ipairs(methods) do
-			local originalFunc = tab[method.name]
-			if originalFunc then
-				tab[method.name] = function(...)
-					local result = originalFunc(...)
-					
-					-- ดักจับค่า Default
-					local args = {...}
-					local idx = args[2] -- idx อยู่ตำแหน่งที่ 2
-					local config = args[3] -- config อยู่ตำแหน่งที่ 3
-					
-					if idx and config and config.Default ~= nil then
-						if method.type == "Toggle" then
-							SaveManager.DefaultValues[idx] = config.Default
-						elseif method.type == "Slider" then
-							SaveManager.DefaultValues[idx] = config.Default
-						elseif method.type == "Dropdown" then
-							if config.Multi and type(config.Default) == "table" then
-								local defaultTable = {}
-								for _, v in ipairs(config.Default) do
-									defaultTable[v] = true
-								end
-								SaveManager.DefaultValues[idx] = defaultTable
-							else
-								SaveManager.DefaultValues[idx] = config.Default
-							end
-						elseif method.type == "Colorpicker" then
-							SaveManager.DefaultValues[idx] = config.Default
-							SaveManager.DefaultValues[idx .. "_transparency"] = config.Transparency or 0
-						elseif method.type == "Keybind" then
-							SaveManager.DefaultValues[idx] = config.Default or "None"
-							SaveManager.DefaultValues[idx .. "_mode"] = config.Mode or "Toggle"
-						elseif method.type == "Input" then
-							SaveManager.DefaultValues[idx] = config.Default
-						end
-					end
-					
-					return result
-				end
-			end
-		end
-	end
-
 	function SaveManager:SetLibrary(library)
 		self.Library = library
 		self.Options = library.Options
-
-		-- Hook ทุก Tab ที่มีอยู่แล้ว
-		if library.Tabs then
-			for _, tab in pairs(library.Tabs) do
-				self:HookTab(tab)
-			end
-		end
-
-		-- Hook Window:AddTab เพื่อดักจับ Tab ใหม่
-		if library.Window and library.Window.AddTab then
-			local originalAddTab = library.Window.AddTab
-			library.Window.AddTab = function(...)
-				local tab = originalAddTab(...)
-				SaveManager:HookTab(tab)
-				return tab
-			end
-		end
 	end
 
 	function SaveManager:Save(name)
-		if not name then return false, "no config file is selected" end
+		if (not name) then
+			return false, "no config file is selected"
+		end
 
 		local fullPath = getConfigFilePath(self, name)
 		local data = { objects = {} }
 
-		for idx, option in next, self.Options do
+		for idx, option in next, SaveManager.Options do
 			if not self.Parser[option.Type] then continue end
 			if self.Ignore[idx] then continue end
-			
-			local saved = self.Parser[option.Type].Save(idx, option)
-			if saved then
-				table.insert(data.objects, saved)
-			end
+			table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
 		end
 
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
-		if not success then return false, "failed to encode data" end
+		if not success then
+			return false, "failed to encode data"
+		end
 
 		local folder = fullPath:match("^(.*)/[^/]+$")
 		if folder then ensureFolder(folder) end
@@ -282,11 +195,12 @@ local SaveManager = {} do
 		return true
 	end
 
+	-- เซฟ UI ของ SaveManager แยกต่างหาก
 	function SaveManager:SaveUI()
 		local uiPath = getSaveManagerUIPath(self)
 		local uiData = {
 			autoload_enabled = (self:GetAutoloadConfig() ~= nil),
-			autoload_config = self:GetAutoloadConfig(),
+			autoload_config = (self:GetAutoloadConfig() or nil),
 			autosave_enabled = self.AutoSaveEnabled,
 			autosave_config = self.AutoSaveConfig
 		}
@@ -299,16 +213,22 @@ local SaveManager = {} do
 		end
 	end
 
+	-- โหลด UI ของ SaveManager
 	function SaveManager:LoadUI()
 		local uiPath = getSaveManagerUIPath(self)
 		if not isfile(uiPath) then return nil end
 
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(uiPath))
-		return success and decoded or nil
+		if success then
+			return decoded
+		end
+		return nil
 	end
 
 	function SaveManager:Load(name)
-		if not name then return false, "no config file is selected" end
+		if (not name) then
+			return false, "no config file is selected"
+		end
 
 		local file = getConfigFilePath(self, name)
 		if not isfile(file) then return false, "invalid file" end
@@ -316,49 +236,43 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
-		local toggles, others = {}, {}
-
+		-- โหลดแบบ batch เพื่อลด overhead
+		local loadCount = 0
 		for _, option in next, decoded.objects do
-			if option.type == "Toggle" then
-				table.insert(toggles, option)
-			else
-				table.insert(others, option)
-			end
-		end
-
-		-- โหลด non-toggles
-		for i, option in ipairs(others) do
 			if self.Parser[option.type] then
-				pcall(self.Parser[option.type].Load, option.idx, option)
-			end
-			if i % 5 == 0 then task.wait() end
-		end
+				local parser = self.Parser[option.type]
+				pcall(parser.Load, option.idx, option)
+				loadCount = loadCount + 1
 
-		-- โหลด toggles ทีหลัง
-		task.defer(function()
-			task.wait(0.1)
-			for i, option in ipairs(toggles) do
-				if self.Parser.Toggle then
-					pcall(self.Parser.Toggle.Load, option.idx, option)
+				-- yield ทุกๆ 10 options เพื่อไม่ให้ค้าง
+				if loadCount % 10 == 0 then
+					task.wait()
 				end
-				if i % 5 == 0 then task.wait() end
 			end
-		end)
+		end
 
 		return true
 	end
 
 	function SaveManager:Delete(name)
-		if not name then return false, "no config file is selected" end
+		if not name then
+			return false, "no config file is selected"
+		end
 
 		local file = getConfigFilePath(self, name)
-		if not isfile(file) then return false, "config does not exist" end
+		if not isfile(file) then 
+			return false, "config does not exist" 
+		end
 
 		delfile(file)
 		
+		-- ถ้าเป็น autoload ให้ลบ autoload ด้วย
 		local autopath = getConfigsFolder(self) .. "/autoload.txt"
-		if isfile(autopath) and readfile(autopath) == name then
-			delfile(autopath)
+		if isfile(autopath) then
+			local currentAutoload = readfile(autopath)
+			if currentAutoload == name then
+				delfile(autopath)
+			end
 		end
 		
 		return true
@@ -366,14 +280,24 @@ local SaveManager = {} do
 
 	function SaveManager:GetAutoloadConfig()
 		local autopath = getConfigsFolder(self) .. "/autoload.txt"
-		return isfile(autopath) and readfile(autopath) or nil
+		if isfile(autopath) then
+			return readfile(autopath)
+		end
+		return nil
 	end
 
 	function SaveManager:SetAutoloadConfig(name)
-		if not name then return false, "no config name provided" end
-		if not isfile(getConfigFilePath(self, name)) then return false, "config does not exist" end
+		if not name then
+			return false, "no config name provided"
+		end
 		
-		writefile(getConfigsFolder(self) .. "/autoload.txt", name)
+		local file = getConfigFilePath(self, name)
+		if not isfile(file) then
+			return false, "config does not exist"
+		end
+		
+		local autopath = getConfigsFolder(self) .. "/autoload.txt"
+		writefile(autopath, name)
 		self:SaveUI()
 		return true
 	end
@@ -389,16 +313,22 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:IgnoreThemeSettings()
-		self:SetIgnoreIndexes({"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"})
+		self:SetIgnoreIndexes({
+			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"
+		})
 	end
 
+	-- Cache config list เพื่อความเร็ว
 	SaveManager._configListCache = nil
 	SaveManager._configListCacheTime = 0
 
 	function SaveManager:RefreshConfigList()
 		local folder = getConfigsFolder(self)
-		if not isfolder(folder) then return {} end
+		if not isfolder(folder) then
+			return {}
+		end
 
+		-- ใช้ cache ถ้าเรียกภายใน 1 วินาที
 		local now = os.clock()
 		if self._configListCache and (now - self._configListCacheTime) < 1 then
 			return self._configListCache
@@ -423,35 +353,50 @@ local SaveManager = {} do
 
 	function SaveManager:LoadAutoloadConfig()
 		local name = self:GetAutoloadConfig()
-		if name then self:Load(name) end
+		if name then
+			self:Load(name)
+		end
 	end
 
+	-- ฟังก์ชัน Auto Save
 	function SaveManager:EnableAutoSave(configName)
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
 		self:SaveUI()
 
+		-- บันทึก callback เดิมและตั้ง callback ใหม่
 		for idx, option in next, self.Options do
 			if not self.Ignore[idx] and self.Parser[option.Type] then
+				-- เก็บ callback เดิมไว้ถ้ายังไม่เคยเก็บ
 				if not self.OriginalCallbacks[idx] then
 					self.OriginalCallbacks[idx] = option.Callback
 				end
 
+				-- สร้าง callback ใหม่ที่ป้องกัน stack overflow
 				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
-					if option._isInCallback then return end
+					-- ป้องกัน recursion ด้วยการใช้ flag
+					if option._isInCallback then
+						return
+					end
+
 					option._isInCallback = true
 
+					-- เรียก callback เดิม
 					if originalCallback then
-						pcall(originalCallback, ...)
+						local success, err = pcall(originalCallback, ...)
+						if not success then
+							warn("Callback error for " .. tostring(idx) .. ": " .. tostring(err))
+						end
 					end
 
 					option._isInCallback = false
 
+					-- Auto save ด้วย debounce
 					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
 						self.AutoSaveDebounce = true
 						task.spawn(function()
-							task.wait(1)
+							task.wait(1) -- รอ 1 วินาทีก่อนเซฟ
 							if self.AutoSaveEnabled and self.AutoSaveConfig then
 								self:Save(self.AutoSaveConfig)
 							end
@@ -468,6 +413,7 @@ local SaveManager = {} do
 		self.AutoSaveConfig = nil
 		self:SaveUI()
 		
+		-- คืนค่า callback เดิม
 		for idx, option in next, self.Options do
 			if self.OriginalCallbacks[idx] then
 				option.Callback = self.OriginalCallbacks[idx]
@@ -475,98 +421,42 @@ local SaveManager = {} do
 		end
 	end
 
+	-- สร้างส่วน UI แบบย่อ: เอา DropDown/Inputs/Buttons ออก เหลือแค่ Auto Load กับ Auto Save
 	function SaveManager:BuildConfigSection(tab)
 		assert(self.Library, "Must set SaveManager.Library")
 
 		local section = tab:AddSection("[ 📁 ] Configuration Manager")
+
+		-- โหลด UI settings
 		local uiSettings = self:LoadUI()
 
-		local ConfigNameInput = section:AddInput("SaveManager_ConfigName", {
-			Title = "Config Name",
-			Description = "Enter config file name",
-			Default = "MyConfig",
-			Placeholder = "Enter name...",
-		})
+		-- ensure AutoSave config file exists (ใช้ชื่อคงที่ "AutoSave")
+		local fixedConfigName = "AutoSave"
+		if not isfile(getConfigFilePath(self, fixedConfigName)) then
+			pcall(function() self:Save(fixedConfigName) end)
+		end
 
-		local configList = self:RefreshConfigList()
-		local ConfigDropdown = section:AddDropdown("SaveManager_ConfigDropdown", {
-			Title = "Select Config",
-			Description = "Choose a config to load",
-			Values = configList,
-			Default = configList[1],
-		})
+		-- Autoload Toggle (ใช้ไฟล์ AutoSave.json แบบคงที่)
+		local currentAutoload = self:GetAutoloadConfig()
 
-		section:AddButton({
-			Title = "Create Config",
-			Description = "Create new config file",
-			Callback = function()
-				local name = SaveManager.Options.SaveManager_ConfigName.Value
-				if name and name ~= "" then
-					name = sanitizeFilename(name)
-					local success = self:Save(name)
-					if success then
-						print("✅ Created: " .. name)
-						local newList = self:RefreshConfigList()
-						ConfigDropdown:SetValues(newList)
-						ConfigDropdown:SetValue(name)
-					end
-				end
-			end
-		})
-
-		section:AddButton({
-			Title = "Save Config",
-			Callback = function()
-				local selected = SaveManager.Options.SaveManager_ConfigDropdown.Value
-				if selected then
-					self:Save(selected)
-					print("✅ Saved: " .. selected)
-				end
-			end
-		})
-
-		section:AddButton({
-			Title = "Load Config",
-			Callback = function()
-				local selected = SaveManager.Options.SaveManager_ConfigDropdown.Value
-				if selected then
-					self:Load(selected)
-					print("✅ Loaded: " .. selected)
-				end
-			end
-		})
-
-		section:AddButton({
-			Title = "Delete Config",
-			Callback = function()
-				local selected = SaveManager.Options.SaveManager_ConfigDropdown.Value
-				if selected then
-					self:Delete(selected)
-					print("✅ Deleted: " .. selected)
-					local newList = self:RefreshConfigList()
-					ConfigDropdown:SetValues(newList)
-					if #newList > 0 then ConfigDropdown:SetValue(newList[1]) end
-				end
-			end
-		})
-
-		section:AddButton({
-			Title = "Refresh List",
-			Callback = function()
-				ConfigDropdown:SetValues(self:RefreshConfigList())
-				print("🔄 Refreshed")
-			end
-		})
-
-		section:AddToggle("SaveManager_AutoloadToggle", {
+		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "Auto Load",
+			Description = "Auto Load Save",
 			Default = (uiSettings and uiSettings.autoload_enabled) or false,
 			Callback = function(value)
 				if value then
-					local selected = SaveManager.Options.SaveManager_ConfigDropdown.Value
-					if selected then
-						self:SetAutoloadConfig(selected)
-						print("✅ Auto load: " .. selected)
+					-- ถ้าไฟล์ยังไม่มี ให้สร้าง
+					if not isfile(getConfigFilePath(self, fixedConfigName)) then
+						self:Save(fixedConfigName)
+					end
+
+					-- ตั้ง autoload เป็น AutoSave
+					local ok, err = self:SetAutoloadConfig(fixedConfigName)
+					if not ok then
+						-- ถ้าตั้งค่าไม่สำเร็จ ให้รีเซ็ต toggle กลับเป็น false
+						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
+							SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
+						end
 					end
 				else
 					self:DisableAutoload()
@@ -574,46 +464,53 @@ local SaveManager = {} do
 			end
 		})
 
-		section:AddToggle("SaveManager_AutoSaveToggle", {
+		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
 			Title = "Auto Save",
+			Description = "Auto Save When You Settings",
 			Default = (uiSettings and uiSettings.autosave_enabled) or false,
 			Callback = function(value)
 				if value then
-					local selected = SaveManager.Options.SaveManager_ConfigDropdown.Value
-					if selected then
-						self:EnableAutoSave(selected)
-						print("✅ Auto save: " .. selected)
+					-- สร้างไฟล์ถ้ายังไม่มี
+					if not isfile(getConfigFilePath(self, fixedConfigName)) then
+						self:Save(fixedConfigName)
 					end
+
+					self:EnableAutoSave(fixedConfigName)
 				else
 					self:DisableAutoSave()
 				end
 			end
 		})
 
-		self:SetIgnoreIndexes({"SaveManager_AutoloadToggle", "SaveManager_AutoSaveToggle", "SaveManager_ConfigName", "SaveManager_ConfigDropdown"})
+		-- ตั้งให้ SaveManager ไม่เซฟค่าของ Toggle ตัวจัดการนี้เอง
+		SaveManager:SetIgnoreIndexes({ 
+			"SaveManager_AutoloadToggle",
+			"SaveManager_AutoSaveToggle"
+		})
 
+		-- โหลด UI settings และเปิดใช้ auto save / auto load ถ้าเคยเปิดไว้
 		if uiSettings then
-			if uiSettings.autoload_enabled and uiSettings.autoload_config then
+			-- Auto Load (ใช้ defer เพื่อไม่ให้ block)
+			if uiSettings.autoload_enabled then
 				task.defer(function()
-					if isfile(getConfigFilePath(self, uiSettings.autoload_config)) then
-						self:Load(uiSettings.autoload_config)
-						task.wait(0.1)
-						if SaveManager.Options.SaveManager_AutoloadToggle then
+					-- พยายามโหลด AutoSave
+					if isfile(getConfigFilePath(self, fixedConfigName)) then
+						SaveManager:Load(fixedConfigName)
+						task.wait(0.1) -- รอให้ UI พร้อม
+						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
 							SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
-						end
-						if SaveManager.Options.SaveManager_ConfigDropdown then
-							ConfigDropdown:SetValue(uiSettings.autoload_config)
 						end
 					end
 				end)
 			end
 
-			if uiSettings.autosave_enabled and uiSettings.autosave_config then
+			-- Auto Save
+			if uiSettings.autosave_enabled then
 				task.defer(function()
-					if isfile(getConfigFilePath(self, uiSettings.autosave_config)) then
-						self:EnableAutoSave(uiSettings.autosave_config)
-						task.wait(0.1)
-						if SaveManager.Options.SaveManager_AutoSaveToggle then
+					if isfile(getConfigFilePath(self, fixedConfigName)) then
+						self:EnableAutoSave(fixedConfigName)
+						task.wait(0.1) -- รอให้ UI พร้อม
+						if SaveManager.Options and SaveManager.Options.SaveManager_AutoSaveToggle then
 							SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
 						end
 					end
