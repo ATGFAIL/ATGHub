@@ -120,37 +120,35 @@ local SaveManager = {} do
 		local placeFolder = root .. "/" .. placeId
 		ensureFolder(placeFolder)
 
-		-- Migrate legacy configs (ทำในพื้นหลังเพื่อไม่ให้ค้าง)
-		task.spawn(function()
-			local legacySettingsFolder = root .. "/settings"
-			if isfolder(legacySettingsFolder) then
-				local files = listfiles(legacySettingsFolder)
-				for i = 1, #files do
-					local f = files[i]
-					if f:sub(-5) == ".json" then
-						local base = f:match("([^/\\]+)%.json$")
-						if base and base ~= "options" then
-							local dest = placeFolder .. "/" .. base .. ".json"
-							if not isfile(dest) then
-								local ok, data = pcall(readfile, f)
-								if ok and data then
-									pcall(writefile, dest, data)
-								end
+		-- Migrate legacy configs (ทำแบบ sync ครั้งเดียว)
+		local legacySettingsFolder = root .. "/settings"
+		if isfolder(legacySettingsFolder) then
+			local files = listfiles(legacySettingsFolder)
+			for i = 1, #files do
+				local f = files[i]
+				if f:sub(-5) == ".json" then
+					local base = f:match("([^/\\]+)%.json$")
+					if base and base ~= "options" then
+						local dest = placeFolder .. "/" .. base .. ".json"
+						if not isfile(dest) then
+							local ok, data = pcall(readfile, f)
+							if ok and data then
+								pcall(writefile, dest, data)
 							end
 						end
 					end
 				end
+			end
 
-				local autopath = legacySettingsFolder .. "/autoload.txt"
-				if isfile(autopath) then
-					local autodata = readfile(autopath)
-					local destAuto = placeFolder .. "/autoload.txt"
-					if not isfile(destAuto) then
-						pcall(writefile, destAuto, autodata)
-					end
+			local autopath = legacySettingsFolder .. "/autoload.txt"
+			if isfile(autopath) then
+				local autodata = readfile(autopath)
+				local destAuto = placeFolder .. "/autoload.txt"
+				if not isfile(destAuto) then
+					pcall(writefile, destAuto, autodata)
 				end
 			end
-		end)
+		end
 	end
 
 	function SaveManager:SetIgnoreIndexes(list)
@@ -236,18 +234,11 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
-		-- โหลดแบบ batch เพื่อลด overhead
-		local loadCount = 0
+		-- โหลดทั้งหมดรวดเดียวไม่มี yield
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
 				local parser = self.Parser[option.type]
 				pcall(parser.Load, option.idx, option)
-				loadCount = loadCount + 1
-
-				-- yield ทุกๆ 10 options เพื่อไม่ให้ค้าง
-				if loadCount % 10 == 0 then
-					task.wait()
-				end
 			end
 		end
 
@@ -318,20 +309,11 @@ local SaveManager = {} do
 		})
 	end
 
-	-- Cache config list เพื่อความเร็ว
-	SaveManager._configListCache = nil
-	SaveManager._configListCacheTime = 0
-
+	-- โหลดตรงๆไม่ใช้ cache
 	function SaveManager:RefreshConfigList()
 		local folder = getConfigsFolder(self)
 		if not isfolder(folder) then
 			return {}
-		end
-
-		-- ใช้ cache ถ้าเรียกภายใน 1 วินาที
-		local now = os.clock()
-		if self._configListCache and (now - self._configListCacheTime) < 1 then
-			return self._configListCache
 		end
 
 		local list = listfiles(folder)
@@ -346,8 +328,6 @@ local SaveManager = {} do
 			end
 		end
 
-		self._configListCache = out
-		self._configListCacheTime = now
 		return out
 	end
 
@@ -436,10 +416,15 @@ local SaveManager = {} do
 			pcall(function() self:Save(fixedConfigName) end)
 		end
 
-		-- Autoload Toggle (ใช้ไฟล์ AutoSave.json แบบคงที่)
-		local currentAutoload = self:GetAutoloadConfig()
+		-- โหลดแบบ instant ก่อนสร้าง UI
+		if uiSettings and uiSettings.autoload_enabled then
+			if isfile(getConfigFilePath(self, fixedConfigName)) then
+				pcall(function() self:Load(fixedConfigName) end)
+			end
+		end
 
-		local AutoloadToggle = section:AddToggle("SaveManager_AutoloadToggle", {
+		-- Autoload Toggle (ใช้ไฟล์ AutoSave.json แบบคงที่)
+		section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "Auto Load",
 			Description = "Auto Load Save",
 			Default = (uiSettings and uiSettings.autoload_enabled) or false,
@@ -451,7 +436,7 @@ local SaveManager = {} do
 					end
 
 					-- ตั้ง autoload เป็น AutoSave
-					local ok, err = self:SetAutoloadConfig(fixedConfigName)
+					local ok = self:SetAutoloadConfig(fixedConfigName)
 					if not ok then
 						-- ถ้าตั้งค่าไม่สำเร็จ ให้รีเซ็ต toggle กลับเป็น false
 						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
@@ -464,7 +449,7 @@ local SaveManager = {} do
 			end
 		})
 
-		local AutoSaveToggle = section:AddToggle("SaveManager_AutoSaveToggle", {
+		section:AddToggle("SaveManager_AutoSaveToggle", {
 			Title = "Auto Save",
 			Description = "Auto Save When You Settings",
 			Default = (uiSettings and uiSettings.autosave_enabled) or false,
@@ -483,38 +468,15 @@ local SaveManager = {} do
 		})
 
 		-- ตั้งให้ SaveManager ไม่เซฟค่าของ Toggle ตัวจัดการนี้เอง
-		SaveManager:SetIgnoreIndexes({ 
+		SaveManager:SetIgnoreIndexes({
 			"SaveManager_AutoloadToggle",
 			"SaveManager_AutoSaveToggle"
 		})
 
-		-- โหลด UI settings และเปิดใช้ auto save / auto load ถ้าเคยเปิดไว้
-		if uiSettings then
-			-- Auto Load (ใช้ defer เพื่อไม่ให้ block)
-			if uiSettings.autoload_enabled then
-				task.defer(function()
-					-- พยายามโหลด AutoSave
-					if isfile(getConfigFilePath(self, fixedConfigName)) then
-						SaveManager:Load(fixedConfigName)
-						task.wait(0.1) -- รอให้ UI พร้อม
-						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
-							SaveManager.Options.SaveManager_AutoloadToggle:SetValue(true)
-						end
-					end
-				end)
-			end
-
-			-- Auto Save
-			if uiSettings.autosave_enabled then
-				task.defer(function()
-					if isfile(getConfigFilePath(self, fixedConfigName)) then
-						self:EnableAutoSave(fixedConfigName)
-						task.wait(0.1) -- รอให้ UI พร้อม
-						if SaveManager.Options and SaveManager.Options.SaveManager_AutoSaveToggle then
-							SaveManager.Options.SaveManager_AutoSaveToggle:SetValue(true)
-						end
-					end
-				end)
+		-- เปิดใช้ Auto Save instant ถ้าเคยเปิดไว้
+		if uiSettings and uiSettings.autosave_enabled then
+			if isfile(getConfigFilePath(self, fixedConfigName)) then
+				pcall(function() self:EnableAutoSave(fixedConfigName) end)
 			end
 		end
 	end
