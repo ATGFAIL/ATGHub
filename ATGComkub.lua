@@ -125,6 +125,10 @@ local allowedPlaces = {
         name = "Anime-Final-Quest",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Final-Quest.lua"
     },
+    [127707120843339] = {
+        name = "Math-Murder",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Math-Murder.lua"
+    },
 }
 
 local function logInfo(...)
