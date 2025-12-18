@@ -129,6 +129,14 @@ local allowedPlaces = {
         name = "Math-Murder",
         url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Math-Murder.lua"
     },
+    [103754275310547] = {
+        name = "Hunty-Zombie",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Hunty-Zombie.lua"
+    },
+    [86076978383613] = {
+        name = "Hunty-Zombie",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Hunty-Zombie.lua"
+    },
 }
 
 local function logInfo(...)
