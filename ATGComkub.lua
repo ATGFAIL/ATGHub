@@ -117,6 +117,14 @@ local allowedPlaces = {
         name = "Blox-Fruits",
         url = "https://api.luarmor.net/files/v3/loaders/45845b7f2bd89b59bb530d8c4e185ddc.lua"
     },
+    [100744519298647] = {
+        name = "Anime-Final-Quest",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Final-Quest.lua"
+    },
+    [136683944064056] = {
+        name = "Anime-Final-Quest",
+        url = "https://raw.githubusercontent.com/ATGFAIL/ATGHub/main/Anime-Final-Quest.lua"
+    },
 }
 
 local function logInfo(...)
