@@ -105,6 +105,10 @@ local allowedPlaces = {
         name = "The-Forge",
         url = "https://api.luarmor.net/files/v3/loaders/50cacceee6d476bea417de597cdb8f55.lua"
     },
+    [131884594917121] = {
+        name = "The-Forge",
+        url = "https://api.luarmor.net/files/v3/loaders/50cacceee6d476bea417de597cdb8f55.lua"
+    },
     [2753915549] = {
         name = "Blox-Fruits",
         url = "https://api.luarmor.net/files/v3/loaders/45845b7f2bd89b59bb530d8c4e185ddc.lua"
