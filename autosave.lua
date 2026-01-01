@@ -10,6 +10,8 @@ local SaveManager = {} do
 	SaveManager.AutoSaveConfig = nil
 	SaveManager.AutoSaveDebounce = false
 	SaveManager.OriginalCallbacks = {}
+	SaveManager.LoadingInProgress = false -- ป้องกันการโหลดซ้อน
+	
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -61,7 +63,6 @@ local SaveManager = {} do
 				end
 			end,
 		},
-
 		Input = {
 			Save = function(idx, object)
 				return { type = "Input", idx = idx, text = object.Value }
@@ -106,7 +107,6 @@ local SaveManager = {} do
 		return folder .. "/" .. name .. ".json"
 	end
 
-	-- ไฟล์สำหรับเซฟ UI ของ SaveManager เอง
 	local function getSaveManagerUIPath(self)
 		local folder = getConfigsFolder(self)
 		return folder .. "/savemanager_ui.json"
@@ -193,7 +193,6 @@ local SaveManager = {} do
 		return true
 	end
 
-	-- เซฟ UI ของ SaveManager แยกต่างหาก
 	function SaveManager:SaveUI()
 		local uiPath = getSaveManagerUIPath(self)
 		local uiData = {
@@ -211,7 +210,6 @@ local SaveManager = {} do
 		end
 	end
 
-	-- โหลด UI ของ SaveManager
 	function SaveManager:LoadUI()
 		local uiPath = getSaveManagerUIPath(self)
 		if not isfile(uiPath) then return nil end
@@ -223,6 +221,61 @@ local SaveManager = {} do
 		return nil
 	end
 
+	-- ฟังก์ชันโหลดแบบ Async (แบ่งโหลดเป็นชุดเล็กๆ)
+	function SaveManager:LoadAsync(name, onProgress)
+		if self.LoadingInProgress then
+			return false, "loading already in progress"
+		end
+		
+		if (not name) then
+			return false, "no config file is selected"
+		end
+
+		local file = getConfigFilePath(self, name)
+		if not isfile(file) then return false, "invalid file" end
+
+		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
+		if not success then return false, "decode error" end
+
+		self.LoadingInProgress = true
+		
+		-- แบ่งการโหลดออกเป็นชุดเล็กๆ (batch)
+		local BATCH_SIZE = 10 -- เพิ่มเป็น 10 items ต่อ batch
+		local BATCH_DELAY = 0.03 -- ลด delay เหลือ 0.03 วินาที
+		
+		task.spawn(function()
+			local totalItems = #decoded.objects
+			local loadedItems = 0
+			
+			for i = 1, totalItems, BATCH_SIZE do
+				-- โหลด batch นี้
+				for j = i, math.min(i + BATCH_SIZE - 1, totalItems) do
+					local option = decoded.objects[j]
+					if self.Parser[option.type] then
+						local parser = self.Parser[option.type]
+						pcall(parser.Load, option.idx, option)
+					end
+					loadedItems = loadedItems + 1
+				end
+				
+				-- แจ้ง progress (ถ้ามี callback)
+				if onProgress then
+					onProgress(loadedItems, totalItems)
+				end
+				
+				-- รอก่อนโหลด batch ถัดไป (เว้นแต่เป็น batch สุดท้าย)
+				if i + BATCH_SIZE <= totalItems then
+					task.wait(BATCH_DELAY)
+				end
+			end
+			
+			self.LoadingInProgress = false
+		end)
+
+		return true
+	end
+
+	-- ฟังก์ชันโหลดแบบเดิม (ปรับ Priority ใหม่)
 	function SaveManager:Load(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -234,13 +287,51 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
-		-- โหลดทั้งหมดรวดเดียวไม่มี yield
+		-- Priority Loading (โหลดตามลำดับความสำคัญ)
+		-- 1. Slider, Input = สำคัญมาก (โหลดก่อน)
+		-- 2. Dropdown, Colorpicker, Keybind = ปานกลาง
+		-- 3. Toggle = โหลดทีหลังสุด
+		
+		local function getTypePriority(typeStr)
+			if typeStr == "Slider" or typeStr == "Input" then
+				return 1 -- สำคัญมาก
+			elseif typeStr == "Dropdown" or typeStr == "Colorpicker" or typeStr == "Keybind" then
+				return 2 -- ปานกลาง
+			elseif typeStr == "Toggle" then
+				return 3 -- โหลดทีหลังสุด
+			end
+			return 4 -- อื่นๆ
+		end
+		
+		-- Phase 1: โหลด Slider และ Input ก่อน (เร็วที่สุด)
 		for _, option in next, decoded.objects do
-			if self.Parser[option.type] then
+			if self.Parser[option.type] and getTypePriority(option.type) == 1 then
 				local parser = self.Parser[option.type]
 				pcall(parser.Load, option.idx, option)
 			end
 		end
+		
+		-- Phase 2: โหลด Dropdown, Colorpicker, Keybind ทีหลัง (background)
+		task.spawn(function()
+			task.wait(0.05)
+			for _, option in next, decoded.objects do
+				if self.Parser[option.type] and getTypePriority(option.type) == 2 then
+					local parser = self.Parser[option.type]
+					pcall(parser.Load, option.idx, option)
+					task.wait(0.005) -- delay เล็กน้อย
+				end
+			end
+			
+			-- Phase 3: โหลด Toggle ทีหลังสุด
+			task.wait(0.1)
+			for _, option in next, decoded.objects do
+				if self.Parser[option.type] and getTypePriority(option.type) == 3 then
+					local parser = self.Parser[option.type]
+					pcall(parser.Load, option.idx, option)
+					task.wait(0.005) -- delay เล็กน้อย
+				end
+			end
+		end)
 
 		return true
 	end
@@ -257,7 +348,6 @@ local SaveManager = {} do
 
 		delfile(file)
 		
-		-- ถ้าเป็น autoload ให้ลบ autoload ด้วย
 		local autopath = getConfigsFolder(self) .. "/autoload.txt"
 		if isfile(autopath) then
 			local currentAutoload = readfile(autopath)
@@ -309,7 +399,6 @@ local SaveManager = {} do
 		})
 	end
 
-	-- โหลดตรงๆไม่ใช้ cache
 	function SaveManager:RefreshConfigList()
 		local folder = getConfigsFolder(self)
 		if not isfolder(folder) then
@@ -334,35 +423,31 @@ local SaveManager = {} do
 	function SaveManager:LoadAutoloadConfig()
 		local name = self:GetAutoloadConfig()
 		if name then
-			self:Load(name)
+			-- ใช้ LoadAsync เพื่อป้องกัน lag
+			self:Load(name) -- หรือใช้ LoadAsync(name) ถ้าต้องการ
 		end
 	end
 
-	-- ฟังก์ชัน Auto Save
+	-- ฟังก์ชัน Auto Save ที่ปรับปรุงแล้ว
 	function SaveManager:EnableAutoSave(configName)
 		self.AutoSaveEnabled = true
 		self.AutoSaveConfig = configName
 		self:SaveUI()
 
-		-- บันทึก callback เดิมและตั้ง callback ใหม่
 		for idx, option in next, self.Options do
 			if not self.Ignore[idx] and self.Parser[option.Type] then
-				-- เก็บ callback เดิมไว้ถ้ายังไม่เคยเก็บ
 				if not self.OriginalCallbacks[idx] then
 					self.OriginalCallbacks[idx] = option.Callback
 				end
 
-				-- สร้าง callback ใหม่ที่ป้องกัน stack overflow
 				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
-					-- ป้องกัน recursion ด้วยการใช้ flag
 					if option._isInCallback then
 						return
 					end
 
 					option._isInCallback = true
 
-					-- เรียก callback เดิม
 					if originalCallback then
 						local success, err = pcall(originalCallback, ...)
 						if not success then
@@ -372,11 +457,11 @@ local SaveManager = {} do
 
 					option._isInCallback = false
 
-					-- Auto save ด้วย debounce
+					-- Auto save ด้วย debounce ที่ยาวขึ้น
 					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
 						self.AutoSaveDebounce = true
 						task.spawn(function()
-							task.wait(1) -- รอ 1 วินาทีก่อนเซฟ
+							task.wait(2) -- เพิ่มเป็น 2 วินาที (จาก 1 วินาที)
 							if self.AutoSaveEnabled and self.AutoSaveConfig then
 								self:Save(self.AutoSaveConfig)
 							end
@@ -393,7 +478,6 @@ local SaveManager = {} do
 		self.AutoSaveConfig = nil
 		self:SaveUI()
 		
-		-- คืนค่า callback เดิม
 		for idx, option in next, self.Options do
 			if self.OriginalCallbacks[idx] then
 				option.Callback = self.OriginalCallbacks[idx]
@@ -401,44 +485,40 @@ local SaveManager = {} do
 		end
 	end
 
-	-- สร้างส่วน UI แบบย่อ: เอา DropDown/Inputs/Buttons ออก เหลือแค่ Auto Load กับ Auto Save
 	function SaveManager:BuildConfigSection(tab)
 		assert(self.Library, "Must set SaveManager.Library")
 
 		local section = tab:AddSection("[ 📁 ] Configuration Manager")
 
-		-- โหลด UI settings
 		local uiSettings = self:LoadUI()
 
-		-- ensure AutoSave config file exists (ใช้ชื่อคงที่ "AutoSave")
 		local fixedConfigName = "AutoSave"
 		if not isfile(getConfigFilePath(self, fixedConfigName)) then
 			pcall(function() self:Save(fixedConfigName) end)
 		end
 
-		-- โหลดแบบ instant ก่อนสร้าง UI
+		-- โหลดแบบ Async เมื่อเริ่มต้น
 		if uiSettings and uiSettings.autoload_enabled then
 			if isfile(getConfigFilePath(self, fixedConfigName)) then
-				pcall(function() self:Load(fixedConfigName) end)
+				task.spawn(function()
+					task.wait(0.5) -- รอให้ UI โหลดเสร็จก่อน
+					pcall(function() self:Load(fixedConfigName) end)
+				end)
 			end
 		end
 
-		-- Autoload Toggle (ใช้ไฟล์ AutoSave.json แบบคงที่)
 		section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "Auto Load",
 			Description = "Auto Load Save",
 			Default = (uiSettings and uiSettings.autoload_enabled) or false,
 			Callback = function(value)
 				if value then
-					-- ถ้าไฟล์ยังไม่มี ให้สร้าง
 					if not isfile(getConfigFilePath(self, fixedConfigName)) then
 						self:Save(fixedConfigName)
 					end
 
-					-- ตั้ง autoload เป็น AutoSave
 					local ok = self:SetAutoloadConfig(fixedConfigName)
 					if not ok then
-						-- ถ้าตั้งค่าไม่สำเร็จ ให้รีเซ็ต toggle กลับเป็น false
 						if SaveManager.Options and SaveManager.Options.SaveManager_AutoloadToggle then
 							SaveManager.Options.SaveManager_AutoloadToggle:SetValue(false)
 						end
@@ -455,7 +535,6 @@ local SaveManager = {} do
 			Default = (uiSettings and uiSettings.autosave_enabled) or false,
 			Callback = function(value)
 				if value then
-					-- สร้างไฟล์ถ้ายังไม่มี
 					if not isfile(getConfigFilePath(self, fixedConfigName)) then
 						self:Save(fixedConfigName)
 					end
@@ -467,16 +546,18 @@ local SaveManager = {} do
 			end
 		})
 
-		-- ตั้งให้ SaveManager ไม่เซฟค่าของ Toggle ตัวจัดการนี้เอง
 		SaveManager:SetIgnoreIndexes({
 			"SaveManager_AutoloadToggle",
 			"SaveManager_AutoSaveToggle"
 		})
 
-		-- เปิดใช้ Auto Save instant ถ้าเคยเปิดไว้
+		-- เปิดใช้ Auto Save แบบ delayed
 		if uiSettings and uiSettings.autosave_enabled then
 			if isfile(getConfigFilePath(self, fixedConfigName)) then
-				pcall(function() self:EnableAutoSave(fixedConfigName) end)
+				task.spawn(function()
+					task.wait(1) -- รอให้ทุกอย่างโหลดเสร็จ
+					pcall(function() self:EnableAutoSave(fixedConfigName) end)
+				end)
 			end
 		end
 	end
