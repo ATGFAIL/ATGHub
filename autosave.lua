@@ -220,8 +220,7 @@ local SaveManager = {} do
 		return nil
 	end
 
-	-- โหลด config ทั้งหมดในรอบเดียว ไม่มี delay ไม่มี priority
-	-- SetValue แต่ละตัวเบามาก ไม่จำเป็นต้องแบ่ง batch หรือ phase
+	-- โหลด config: ของเบาโหลดตรง, Toggle stagger เพื่อกระจาย heavy callback
 	function SaveManager:Load(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -234,12 +233,32 @@ local SaveManager = {} do
 		if not success then return false, "decode error" end
 
 		local objects = decoded.objects
+		local deferredToggles = {}
+
+		-- โหลดของเบาทันที (Slider/Input/Dropdown/Colorpicker/Keybind)
 		for i = 1, #objects do
 			local option = objects[i]
 			local parser = self.Parser[option.type]
 			if parser then
-				pcall(parser.Load, option.idx, option)
+				if option.type == "Toggle" then
+					deferredToggles[#deferredToggles + 1] = option
+				else
+					pcall(parser.Load, option.idx, option)
+				end
 			end
+		end
+
+		-- โหลด Toggle แบบ stagger (yield ทุก 5 ตัว ให้เกมหายใจ)
+		if #deferredToggles > 0 then
+			task.spawn(function()
+				for i = 1, #deferredToggles do
+					local option = deferredToggles[i]
+					pcall(self.Parser.Toggle.Load, option.idx, option)
+					if i % 5 == 0 then
+						task.wait()
+					end
+				end
+			end)
 		end
 
 		return true
