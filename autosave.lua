@@ -4,6 +4,7 @@ local Workspace = game:GetService("Workspace")
 
 local SaveManager = {} do
 	SaveManager.FolderRoot = "ATGSettings"
+	SaveManager.SubFolder = nil  -- ถ้าตั้งไว้จะใช้แทน PlaceId (share save ข้าม PlaceId)
 	SaveManager.Ignore = {}
 	SaveManager.Options = {}
 	SaveManager.AutoSaveEnabled = false
@@ -97,8 +98,8 @@ local SaveManager = {} do
 
 	local function getConfigsFolder(self)
 		local root = self.FolderRoot
-		local placeId = getPlaceId()
-		return root .. "/" .. placeId
+		local sub = self.SubFolder or getPlaceId()
+		return root .. "/" .. sub
 	end
 
 	local function getConfigFilePath(self, name)
@@ -115,8 +116,8 @@ local SaveManager = {} do
 		local root = self.FolderRoot
 		ensureFolder(root)
 
-		local placeId = getPlaceId()
-		local placeFolder = root .. "/" .. placeId
+		local sub = self.SubFolder or getPlaceId()
+		local placeFolder = root .. "/" .. sub
 		ensureFolder(placeFolder)
 
 		-- Migrate legacy configs (ทำแบบ sync ครั้งเดียว)
@@ -158,6 +159,11 @@ local SaveManager = {} do
 
 	function SaveManager:SetFolder(folder)
 		self.FolderRoot = tostring(folder or "ATGSettings")
+		self:BuildFolderTree()
+	end
+
+	function SaveManager:SetSubFolder(name)
+		self.SubFolder = name and tostring(name) or nil
 		self:BuildFolderTree()
 	end
 
