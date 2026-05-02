@@ -227,49 +227,219 @@ local SaveManager = {} do
 	end
 
 	local function createLoadingUI(total)
-		local CoreGui = game:GetService("CoreGui")
+		local TweenService = game:GetService("TweenService")
+		local CoreGui     = game:GetService("CoreGui")
 
 		local gui = Instance.new("ScreenGui")
-		gui.Name = "SaveManagerLoading"
-		gui.ResetOnSpawn = false
-		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		gui.DisplayOrder = 999
+		gui.Name            = "SaveManagerLoading"
+		gui.ResetOnSpawn    = false
+		gui.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
+		gui.DisplayOrder    = 9999
 
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0, 220, 0, 56)
-		frame.Position = UDim2.new(0.5, -110, 0, 24)
-		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-		frame.BackgroundTransparency = 0.1
-		frame.BorderSizePixel = 0
-		frame.Parent = gui
+		-- Card
+		local card = Instance.new("Frame")
+		card.Size                  = UDim2.new(0, 300, 0, 108)
+		card.Position              = UDim2.new(0.5, -150, 0, -130)
+		card.BackgroundColor3      = Color3.fromRGB(13, 13, 18)
+		card.BackgroundTransparency = 0
+		card.BorderSizePixel       = 0
+		card.Parent                = gui
+		Instance.new("UICorner", card).CornerRadius = UDim.new(0, 16)
 
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
-		corner.Parent = frame
+		local cardGrad = Instance.new("UIGradient", card)
+		cardGrad.Color    = ColorSequence.new({
+			ColorSequenceKeypoint.new(0,   Color3.fromRGB(20, 20, 32)),
+			ColorSequenceKeypoint.new(1,   Color3.fromRGB(10, 10, 14)),
+		})
+		cardGrad.Rotation = 135
 
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, 0, 0.5, 0)
-		label.Position = UDim2.new(0, 0, 0, 0)
-		label.BackgroundTransparency = 1
-		label.TextColor3 = Color3.fromRGB(255, 255, 255)
-		label.TextSize = 13
-		label.Font = Enum.Font.GothamBold
-		label.Text = "Loading Save"
-		label.Parent = frame
+		-- Glowing border
+		local stroke = Instance.new("UIStroke", card)
+		stroke.Color             = Color3.fromRGB(82, 160, 255)
+		stroke.Thickness         = 1.2
+		stroke.Transparency      = 0.35
+		stroke.ApplyStrokeMode   = Enum.ApplyStrokeMode.Border
 
-		local sub = Instance.new("TextLabel")
-		sub.Size = UDim2.new(1, 0, 0.5, 0)
-		sub.Position = UDim2.new(0, 0, 0.5, 0)
-		sub.BackgroundTransparency = 1
-		sub.TextColor3 = Color3.fromRGB(180, 180, 180)
-		sub.TextSize = 12
-		sub.Font = Enum.Font.Gotham
-		sub.Text = "0 / " .. total
-		sub.Parent = frame
+		-- Top accent bar (animates width 0 → full)
+		local accentBar = Instance.new("Frame", card)
+		accentBar.Size             = UDim2.new(0, 0, 0, 2)
+		accentBar.Position         = UDim2.new(0, 0, 0, 0)
+		accentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		accentBar.BorderSizePixel  = 0
+		accentBar.ZIndex           = 4
+		Instance.new("UICorner", accentBar).CornerRadius = UDim.new(0, 2)
+		local accentGrad = Instance.new("UIGradient", accentBar)
+		accentGrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0,   Color3.fromRGB(139, 92, 246)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(82, 160, 255)),
+			ColorSequenceKeypoint.new(1,   Color3.fromRGB(16, 185, 129)),
+		})
+
+		-- Inner padding
+		local inner = Instance.new("Frame", card)
+		inner.Size                  = UDim2.new(1, -32, 1, -20)
+		inner.Position              = UDim2.new(0, 16, 0, 14)
+		inner.BackgroundTransparency = 1
+
+		-- "LOADING SAVE" title
+		local titleLbl = Instance.new("TextLabel", inner)
+		titleLbl.Size              = UDim2.new(0.65, 0, 0, 18)
+		titleLbl.Position          = UDim2.new(0, 0, 0, 0)
+		titleLbl.BackgroundTransparency = 1
+		titleLbl.TextColor3        = Color3.fromRGB(225, 225, 240)
+		titleLbl.TextSize          = 12
+		titleLbl.Font              = Enum.Font.GothamBold
+		titleLbl.Text              = "LOADING SAVE"
+		titleLbl.TextXAlignment    = Enum.TextXAlignment.Left
+		titleLbl.TextTransparency  = 1
+
+		-- Count  "X / Y"
+		local countLbl = Instance.new("TextLabel", inner)
+		countLbl.Size              = UDim2.new(0.35, 0, 0, 18)
+		countLbl.Position          = UDim2.new(0.65, 0, 0, 0)
+		countLbl.BackgroundTransparency = 1
+		countLbl.TextColor3        = Color3.fromRGB(82, 160, 255)
+		countLbl.TextSize          = 12
+		countLbl.Font              = Enum.Font.GothamBold
+		countLbl.Text              = "0 / " .. total
+		countLbl.TextXAlignment    = Enum.TextXAlignment.Right
+		countLbl.TextTransparency  = 1
+
+		-- Progress bar background
+		local barBg = Instance.new("Frame", inner)
+		barBg.Size             = UDim2.new(1, 0, 0, 7)
+		barBg.Position         = UDim2.new(0, 0, 0, 26)
+		barBg.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+		barBg.BorderSizePixel  = 0
+		barBg.ClipsDescendants = true
+		Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+
+		-- Progress bar fill
+		local barFill = Instance.new("Frame", barBg)
+		barFill.Size             = UDim2.new(0, 0, 1, 0)
+		barFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		barFill.BorderSizePixel  = 0
+		barFill.ZIndex           = 2
+		Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
+		local fillGrad = Instance.new("UIGradient", barFill)
+		fillGrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0,   Color3.fromRGB(139, 92, 246)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(82, 160, 255)),
+			ColorSequenceKeypoint.new(1,   Color3.fromRGB(16, 185, 129)),
+		})
+
+		-- Shimmer overlay on fill
+		local shimmer = Instance.new("Frame", barFill)
+		shimmer.Size             = UDim2.new(0.35, 0, 1, 0)
+		shimmer.Position         = UDim2.new(-0.4, 0, 0, 0)
+		shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		shimmer.BackgroundTransparency = 0.65
+		shimmer.BorderSizePixel  = 0
+		shimmer.ZIndex           = 3
+		Instance.new("UICorner", shimmer).CornerRadius = UDim.new(1, 0)
+
+		-- Percent label
+		local pctLbl = Instance.new("TextLabel", inner)
+		pctLbl.Size              = UDim2.new(0.5, 0, 0, 14)
+		pctLbl.Position          = UDim2.new(0, 0, 0, 41)
+		pctLbl.BackgroundTransparency = 1
+		pctLbl.TextColor3        = Color3.fromRGB(100, 100, 130)
+		pctLbl.TextSize          = 10
+		pctLbl.Font              = Enum.Font.Gotham
+		pctLbl.Text              = "0%"
+		pctLbl.TextXAlignment    = Enum.TextXAlignment.Left
+		pctLbl.TextTransparency  = 1
+
+		-- Status label
+		local statusLbl = Instance.new("TextLabel", inner)
+		statusLbl.Size              = UDim2.new(0.5, 0, 0, 14)
+		statusLbl.Position          = UDim2.new(0.5, 0, 0, 41)
+		statusLbl.BackgroundTransparency = 1
+		statusLbl.TextColor3        = Color3.fromRGB(70, 70, 95)
+		statusLbl.TextSize          = 10
+		statusLbl.Font              = Enum.Font.Gotham
+		statusLbl.Text              = "INITIALIZING"
+		statusLbl.TextXAlignment    = Enum.TextXAlignment.Right
+		statusLbl.TextTransparency  = 1
 
 		pcall(function() gui.Parent = CoreGui end)
 
-		return gui, sub
+		-- === Animations ===
+		-- Slide in
+		TweenService:Create(card,
+			TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Position = UDim2.new(0.5, -150, 0, 24) }
+		):Play()
+
+		-- Fade in text
+		task.delay(0.25, function()
+			local fi = TweenInfo.new(0.3, Enum.EasingStyle.Quad)
+			for _, lbl in ipairs({ titleLbl, countLbl, pctLbl, statusLbl }) do
+				TweenService:Create(lbl, fi, { TextTransparency = 0 }):Play()
+			end
+		end)
+
+		-- Accent bar sweep
+		TweenService:Create(accentBar,
+			TweenInfo.new(0.55, Enum.EasingStyle.Quad),
+			{ Size = UDim2.new(1, 0, 0, 2) }
+		):Play()
+
+		-- Border pulse loop
+		local alive = true
+		task.spawn(function()
+			while alive do
+				TweenService:Create(stroke,
+					TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+					{ Transparency = 0.7 }
+				):Play()
+				task.wait(1.6)
+				if not alive then break end
+				TweenService:Create(stroke,
+					TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+					{ Transparency = 0.15 }
+				):Play()
+				task.wait(1.6)
+			end
+		end)
+
+		-- Shimmer loop
+		task.spawn(function()
+			while alive do
+				shimmer.Position = UDim2.new(-0.4, 0, 0, 0)
+				TweenService:Create(shimmer,
+					TweenInfo.new(1.0, Enum.EasingStyle.Linear),
+					{ Position = UDim2.new(1.4, 0, 0, 0) }
+				):Play()
+				task.wait(2.2)
+			end
+		end)
+
+		-- updateFn
+		local function updateFn(current, tot)
+			local ratio = current / tot
+			local pct   = math.floor(ratio * 100)
+			countLbl.Text  = current .. " / " .. tot
+			pctLbl.Text    = pct .. "%"
+			statusLbl.Text = pct >= 100 and "COMPLETE" or "LOADING..."
+			TweenService:Create(barFill,
+				TweenInfo.new(0.1, Enum.EasingStyle.Quad),
+				{ Size = UDim2.new(ratio, 0, 1, 0) }
+			):Play()
+		end
+
+		-- handle with animated exit
+		local handle = {}
+		function handle:Destroy()
+			alive = false
+			TweenService:Create(card,
+				TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+				{ Position = UDim2.new(0.5, -150, 0, -130) }
+			):Play()
+			task.delay(0.35, function() pcall(function() gui:Destroy() end) end)
+		end
+
+		return handle, updateFn
 	end
 
 	function SaveManager:Load(name)
@@ -299,7 +469,7 @@ local SaveManager = {} do
 			end
 
 			local grandTotal = #others + #toggles
-			local gui, sub = createLoadingUI(grandTotal)
+			local handle, updateFn = createLoadingUI(grandTotal)
 			local count = 0
 
 			for i = 1, #others do
@@ -309,7 +479,7 @@ local SaveManager = {} do
 					pcall(parser.Load, option.idx, option)
 				end
 				count = count + 1
-				sub.Text = count .. " / " .. grandTotal
+				updateFn(count, grandTotal)
 				task.wait(0.05)
 			end
 
@@ -317,13 +487,11 @@ local SaveManager = {} do
 				local option = toggles[i]
 				pcall(self.Parser.Toggle.Load, option.idx, option)
 				count = count + 1
-				sub.Text = count .. " / " .. grandTotal
+				updateFn(count, grandTotal)
 				task.wait(0.3)
 			end
 
-			if gui then
-				gui:Destroy()
-			end
+			handle:Destroy()
 		end)
 
 		return true
