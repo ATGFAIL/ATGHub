@@ -287,7 +287,15 @@ local SaveManager = {} do
 		local total = #objects
 
 		task.spawn(function()
+			local RunService = game:GetService("RunService")
 			local gui, sub = createLoadingUI(total)
+
+			-- sample FPS over a few frames before starting
+			local deltaSum = 0
+			for _ = 1, 5 do
+				deltaSum = deltaSum + RunService.Heartbeat:Wait()
+			end
+			local avgDelta = deltaSum / 5
 
 			for i = 1, total do
 				local option = objects[i]
@@ -296,7 +304,16 @@ local SaveManager = {} do
 					pcall(parser.Load, option.idx, option)
 				end
 				sub.Text = i .. " / " .. total
-				task.wait()
+
+				-- adaptive wait: slow device (high delta) = longer pause, fast device = shorter pause
+				-- clamp between 0.016s (60fps) and 0.2s (very slow)
+				local waitTime = math.clamp(avgDelta * 2, 0.016, 0.2)
+				task.wait(waitTime)
+
+				-- re-sample delta every 10 items to adapt if FPS changes mid-load
+				if i % 10 == 0 then
+					avgDelta = RunService.Heartbeat:Wait()
+				end
 			end
 
 			if gui then
