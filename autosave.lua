@@ -287,16 +287,38 @@ local SaveManager = {} do
 		local total = #objects
 
 		task.spawn(function()
-			local gui, sub = createLoadingUI(total)
-
+			local others = {}
+			local toggles = {}
 			for i = 1, total do
 				local option = objects[i]
+				if option.type == "Toggle" then
+					toggles[#toggles + 1] = option
+				else
+					others[#others + 1] = option
+				end
+			end
+
+			local grandTotal = #others + #toggles
+			local gui, sub = createLoadingUI(grandTotal)
+			local count = 0
+
+			for i = 1, #others do
+				local option = others[i]
 				local parser = self.Parser[option.type]
 				if parser then
 					pcall(parser.Load, option.idx, option)
 				end
-				sub.Text = i .. " / " .. total
-				task.wait(0.5)
+				count = count + 1
+				sub.Text = count .. " / " .. grandTotal
+				task.wait(0.05)
+			end
+
+			for i = 1, #toggles do
+				local option = toggles[i]
+				pcall(self.Parser.Toggle.Load, option.idx, option)
+				count = count + 1
+				sub.Text = count .. " / " .. grandTotal
+				task.wait(0.3)
 			end
 
 			if gui then
