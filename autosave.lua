@@ -307,7 +307,7 @@ local SaveManager = {} do
 
 				-- adaptive wait: slow device (high delta) = longer pause, fast device = shorter pause
 				-- clamp between 0.016s (60fps) and 0.2s (very slow)
-				local waitTime = math.clamp(avgDelta * 2, 0.016, 0.2)
+				local waitTime = (60 / total) * (avgDelta / 0.016)
 				task.wait(waitTime)
 
 				-- re-sample delta every 10 items to adapt if FPS changes mid-load
