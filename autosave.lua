@@ -480,7 +480,7 @@ local SaveManager = {} do
 				end
 				count = count + 1
 				updateFn(count, grandTotal)
-				task.wait(0.05)
+				task.wait(0.08)
 			end
 
 			for i = 1, #toggles do
@@ -488,7 +488,7 @@ local SaveManager = {} do
 				pcall(self.Parser.Toggle.Load, option.idx, option)
 				count = count + 1
 				updateFn(count, grandTotal)
-				task.wait(0.3)
+				task.wait(0.05)
 			end
 
 			handle:Destroy()
