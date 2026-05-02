@@ -226,7 +226,52 @@ local SaveManager = {} do
 		return nil
 	end
 
-	-- โหลด config: ของเบาโหลดตรง, Toggle stagger เพื่อกระจาย heavy callback
+	local function createLoadingUI(total)
+		local CoreGui = game:GetService("CoreGui")
+
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "SaveManagerLoading"
+		gui.ResetOnSpawn = false
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		gui.DisplayOrder = 999
+
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(0, 220, 0, 56)
+		frame.Position = UDim2.new(0.5, -110, 0, 24)
+		frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		frame.BackgroundTransparency = 0.1
+		frame.BorderSizePixel = 0
+		frame.Parent = gui
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = frame
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 0.5, 0)
+		label.Position = UDim2.new(0, 0, 0, 0)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.TextSize = 13
+		label.Font = Enum.Font.GothamBold
+		label.Text = "Loading Save"
+		label.Parent = frame
+
+		local sub = Instance.new("TextLabel")
+		sub.Size = UDim2.new(1, 0, 0.5, 0)
+		sub.Position = UDim2.new(0, 0, 0.5, 0)
+		sub.BackgroundTransparency = 1
+		sub.TextColor3 = Color3.fromRGB(180, 180, 180)
+		sub.TextSize = 12
+		sub.Font = Enum.Font.Gotham
+		sub.Text = "0 / " .. total
+		sub.Parent = frame
+
+		pcall(function() gui.Parent = CoreGui end)
+
+		return gui, sub
+	end
+
 	function SaveManager:Load(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -238,34 +283,26 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, "decode error" end
 
-		local objects = decoded.objects
-		local deferredToggles = {}
+		local objects = decoded.objects or {}
+		local total = #objects
 
-		-- โหลดของเบาทันที (Slider/Input/Dropdown/Colorpicker/Keybind)
-		for i = 1, #objects do
-			local option = objects[i]
-			local parser = self.Parser[option.type]
-			if parser then
-				if option.type == "Toggle" then
-					deferredToggles[#deferredToggles + 1] = option
-				else
+		task.spawn(function()
+			local gui, sub = createLoadingUI(total)
+
+			for i = 1, total do
+				local option = objects[i]
+				local parser = self.Parser[option.type]
+				if parser then
 					pcall(parser.Load, option.idx, option)
 				end
+				sub.Text = i .. " / " .. total
+				task.wait()
 			end
-		end
 
-		-- โหลด Toggle แบบ stagger (yield ทุก 5 ตัว ให้เกมหายใจ)
-		if #deferredToggles > 0 then
-			task.spawn(function()
-				for i = 1, #deferredToggles do
-					local option = deferredToggles[i]
-					pcall(self.Parser.Toggle.Load, option.idx, option)
-					if i % 5 == 0 then
-						task.wait()
-					end
-				end
-			end)
-		end
+			if gui then
+				gui:Destroy()
+			end
+		end)
 
 		return true
 	end
