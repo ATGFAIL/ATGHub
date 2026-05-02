@@ -455,15 +455,6 @@ local SaveManager = {} do
 			pcall(function() self:Save(fixedConfigName) end)
 		end
 
-		-- โหลด config ตอนเริ่มต้น
-		if uiSettings and uiSettings.autoload_enabled then
-			if isfile(getConfigFilePath(self, fixedConfigName)) then
-				task.defer(function()
-					pcall(function() self:Load(fixedConfigName) end)
-				end)
-			end
-		end
-
 		section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "Auto Load",
 			Description = "Auto Load Save",
