@@ -11,6 +11,7 @@ local SaveManager = {} do
 	SaveManager.AutoSaveConfig = nil
 	SaveManager.AutoSaveDebounce = false
 	SaveManager.OriginalCallbacks = {}
+	SaveManager.Defaults = {}
 	
 	SaveManager.Parser = {
 		Toggle = {
@@ -172,6 +173,20 @@ local SaveManager = {} do
 		self.Options = library.Options
 	end
 
+	function SaveManager:CaptureDefaults()
+		self.Defaults = {}
+		for idx, option in next, self.Options do
+			local parser = self.Parser[option.Type]
+			if parser and not self.Ignore[idx] then
+				local entry = parser.Save(idx, option)
+				local ok, encoded = pcall(httpService.JSONEncode, httpService, entry)
+				if ok then
+					self.Defaults[idx] = encoded
+				end
+			end
+		end
+	end
+
 	function SaveManager:Save(name)
 		if (not name) then
 			return false, "no config file is selected"
@@ -183,7 +198,10 @@ local SaveManager = {} do
 		for idx, option in next, SaveManager.Options do
 			if not self.Parser[option.Type] then continue end
 			if self.Ignore[idx] then continue end
-			table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
+			local entry = self.Parser[option.Type].Save(idx, option)
+			local ok, encoded = pcall(httpService.JSONEncode, httpService, entry)
+			if ok and self.Defaults[idx] == encoded then continue end
+			table.insert(data.objects, entry)
 		end
 
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
@@ -582,6 +600,9 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:LoadAutoloadConfig()
+		if not next(self.Defaults) then
+			self:CaptureDefaults()
+		end
 		local name = self:GetAutoloadConfig()
 		if name then
 			-- ใช้ LoadAsync เพื่อป้องกัน lag
