@@ -623,19 +623,21 @@ local SaveManager = {} do
 
 				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
-					if originalCallback then
-						originalCallback(...)
-					end
-
-					-- Debounce: รวม save หลายๆ การเปลี่ยนแปลงเป็นครั้งเดียว
+					-- Leading edge: เซฟก่อน originalCallback กัน server hop / teleport ทำให้ state หาย
 					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
 						self.AutoSaveDebounce = true
+						pcall(function() self:Save(self.AutoSaveConfig) end)
 						task.delay(3, function()
 							self.AutoSaveDebounce = false
+							-- Trailing edge: เก็บค่าที่เปลี่ยนระหว่าง 3 วิ
 							if self.AutoSaveEnabled and self.AutoSaveConfig then
 								self:Save(self.AutoSaveConfig)
 							end
 						end)
+					end
+
+					if originalCallback then
+						originalCallback(...)
 					end
 				end
 			end
