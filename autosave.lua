@@ -12,6 +12,7 @@ local SaveManager = {} do
 	SaveManager.AutoSaveDebounce = false
 	SaveManager.OriginalCallbacks = {}
 	SaveManager.Defaults = {}
+	SaveManager.IsLoading = false
 	
 	SaveManager.Parser = {
 		Toggle = {
@@ -475,6 +476,7 @@ local SaveManager = {} do
 		local total = #objects
 
 		task.spawn(function()
+			self.IsLoading = true
 			local others = {}
 			local toggles = {}
 			for i = 1, total do
@@ -490,26 +492,32 @@ local SaveManager = {} do
 			local handle, updateFn = createLoadingUI(grandTotal)
 			local count = 0
 
-			for i = 1, #others do
-				local option = others[i]
-				local parser = self.Parser[option.type]
-				if parser then
-					pcall(parser.Load, option.idx, option)
+			local ok, err = pcall(function()
+				for i = 1, #others do
+					local option = others[i]
+					local parser = self.Parser[option.type]
+					if parser then
+						pcall(parser.Load, option.idx, option)
+					end
+					count = count + 1
+					updateFn(count, grandTotal)
+					task.wait(0.1)
 				end
-				count = count + 1
-				updateFn(count, grandTotal)
-				task.wait(0.1)
-			end
 
-			for i = 1, #toggles do
-				local option = toggles[i]
-				pcall(self.Parser.Toggle.Load, option.idx, option)
-				count = count + 1
-				updateFn(count, grandTotal)
-				task.wait(0.01)
-			end
+				for i = 1, #toggles do
+					local option = toggles[i]
+					pcall(self.Parser.Toggle.Load, option.idx, option)
+					count = count + 1
+					updateFn(count, grandTotal)
+					task.wait(0.01)
+				end
+			end)
 
+			self.IsLoading = false
 			handle:Destroy()
+			if not ok then
+				warn("[SaveManager] Load failed:", err)
+			end
 		end)
 
 		return true
@@ -624,13 +632,13 @@ local SaveManager = {} do
 				local originalCallback = self.OriginalCallbacks[idx]
 				option.Callback = function(...)
 					-- Leading edge: เซฟก่อน originalCallback กัน server hop / teleport ทำให้ state หาย
-					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce then
+					if self.AutoSaveEnabled and self.AutoSaveConfig and not self.AutoSaveDebounce and not self.IsLoading then
 						self.AutoSaveDebounce = true
 						pcall(function() self:Save(self.AutoSaveConfig) end)
 						task.delay(3, function()
 							self.AutoSaveDebounce = false
 							-- Trailing edge: เก็บค่าที่เปลี่ยนระหว่าง 3 วิ
-							if self.AutoSaveEnabled and self.AutoSaveConfig then
+							if self.AutoSaveEnabled and self.AutoSaveConfig and not self.IsLoading then
 								self:Save(self.AutoSaveConfig)
 							end
 						end)
