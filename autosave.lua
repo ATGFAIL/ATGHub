@@ -37,11 +37,47 @@ local SaveManager = {} do
 		},
 		Dropdown = {
 			Save = function(idx, object)
-				return { type = "Dropdown", idx = idx, value = object.Value, multi = object.Multi }
+				if object.Multi then
+					-- object.Value อาจเป็น mixed table ({[1]="Strawberry", Strawberry=true})
+					-- เพราะ default ถูกสร้างเป็น array แล้วเติม key แบบ map ทับ
+					-- JSONEncode บน mixed table จะ serialize เฉพาะส่วน array ทำให้ load กลับมาไม่ได้
+					-- จึง normalize ให้เหลือเฉพาะ "รายชื่อที่ถูกเลือก" เป็น array ที่สะอาด
+					local list = {}
+					if type(object.Value) == "table" then
+						for k, v in pairs(object.Value) do
+							if type(k) == "string" and v then
+								table.insert(list, k)
+							end
+						end
+					end
+					table.sort(list) -- ลำดับคงที่ เพื่อให้เทียบกับ Defaults (delta save) ได้ตรง
+					return { type = "Dropdown", idx = idx, value = list, multi = true }
+				end
+				return { type = "Dropdown", idx = idx, value = object.Value, multi = false }
 			end,
 			Load = function(idx, data)
-				if SaveManager.Options[idx] then
-					SaveManager.Options[idx]:SetValue(data.value)
+				local option = SaveManager.Options[idx]
+				if not option then return end
+
+				local isMulti = option.Multi
+				if isMulti == nil then isMulti = data.multi end
+
+				if isMulti then
+					-- multi SetValue ต้องการ map { name = true }
+					-- รองรับทั้งฟอร์แมตใหม่ (array รายชื่อ) และไฟล์เก่า (map name->bool)
+					local map = {}
+					if type(data.value) == "table" then
+						for k, v in pairs(data.value) do
+							if type(k) == "string" then
+								if v then map[k] = true end        -- legacy: { name = true }
+							elseif type(v) == "string" then
+								map[v] = true                       -- new: { name1, name2 }
+							end
+						end
+					end
+					option:SetValue(map)
+				else
+					option:SetValue(data.value)
 				end
 			end,
 		},
