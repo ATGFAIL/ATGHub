@@ -618,7 +618,21 @@ local SaveManager = {} do
 
 	function SaveManager:IgnoreThemeSettings()
 		self:SetIgnoreIndexes({
-			"InterfaceTheme", "AcrylicToggle", "TransparentToggle", "MenuKeybind"
+			"InterfaceTheme",
+			"AcrylicToggle",
+			"TransparentToggle",
+			"MenuKeybind",
+			"InterfaceFloatingToggle",
+			-- Stored by InterfaceManager (global or script-scoped), never per-place.
+			"InterfaceLanguage",
+			"InterfaceTranslationMode",
+			"InterfaceTranslationEnabled",
+			"InterfaceLanguagePackUrl",
+			"InterfaceTemplateLocale",
+			"InterfaceInstalledLanguagePack",
+			"InterfaceFontProfile",
+			"InterfaceFontTarget",
+			"InterfaceFontUrl"
 		})
 	end
 
