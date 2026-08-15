@@ -633,6 +633,12 @@ local SaveManager = {} do
 			"InterfaceFontProfile",
 			"InterfaceFontTarget",
 			"InterfaceFontUrl",
+			"InterfaceFontTuningEnabled",
+			"InterfaceFontSizeScale",
+			"InterfaceFontWeight",
+			"InterfaceFontStyle",
+			"InterfaceFontLineHeight",
+			"InterfaceFontStroke",
 			"InterfaceAdvancedTools"
 		})
 	end
