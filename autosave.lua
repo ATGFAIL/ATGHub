@@ -632,7 +632,8 @@ local SaveManager = {} do
 			"InterfaceInstalledLanguagePack",
 			"InterfaceFontProfile",
 			"InterfaceFontTarget",
-			"InterfaceFontUrl"
+			"InterfaceFontUrl",
+			"InterfaceAdvancedTools"
 		})
 	end
 
@@ -717,7 +718,13 @@ local SaveManager = {} do
 	function SaveManager:BuildConfigSection(tab)
 		assert(self.Library, "Must set SaveManager.Library")
 
-		local section = tab:AddSection("[ 📁 ] Configuration Manager")
+		local section = tab:AddSection("Auto save")
+
+		-- The section is usually created after InterfaceManager.  Put the two
+		-- save switches first without requiring every hub script to change.
+		if section.Root then
+			section.Root.LayoutOrder = -100
+		end
 
 		local uiSettings = self:LoadUI()
 
@@ -728,7 +735,7 @@ local SaveManager = {} do
 
 		section:AddToggle("SaveManager_AutoloadToggle", {
 			Title = "Auto Load",
-			Description = "Auto Load Save",
+			Description = "Load saved settings on start.",
 			Default = (uiSettings and uiSettings.autoload_enabled) or false,
 			Callback = function(value)
 				if value then
@@ -750,7 +757,7 @@ local SaveManager = {} do
 
 		section:AddToggle("SaveManager_AutoSaveToggle", {
 			Title = "Auto Save",
-			Description = "Auto Save When You Settings",
+			Description = "Save changes automatically.",
 			Default = (uiSettings and uiSettings.autosave_enabled) or false,
 			Callback = function(value)
 				if value then
